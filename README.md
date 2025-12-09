@@ -145,7 +145,7 @@ skillshare-local/
 
 ## Contributors
 
-- ChrisPa691
+- Christos Paparistodimou
 
 ## License
 
@@ -154,5 +154,5 @@ This is a university course project developed for educational purposes.
 ---
 
 **Course**: ACSC476 - Web Programming  
-**Institution**: [Your University Name]  
+**Institution**: Frederick University   
 **Semester**: Fall 2025

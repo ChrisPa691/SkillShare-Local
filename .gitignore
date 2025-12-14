@@ -1,1 +1,19 @@
 TODO.md
+
+# Environment files
+.env
+
+# Uploads
+public/assets/images/sessions/*
+!public/assets/images/sessions/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+docs/Requirement_Analysis
+docs/ACSC476-CourseProject-F25.pdf
+SkillShare.session.sql

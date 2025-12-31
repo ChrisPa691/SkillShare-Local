@@ -14,6 +14,5 @@ public/assets/images/sessions/*
 # OS files
 .DS_Store
 Thumbs.db
-docs/Requirement_Analysis
-docs/ACSC476-CourseProject-F25.pdf
+docs/
 SkillShare.session.sql

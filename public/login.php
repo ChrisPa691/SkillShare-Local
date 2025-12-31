@@ -1,13 +1,13 @@
 <?php
 session_start();
 require_once '../app/config/database.php';
+require_once '../app/includes/helpers.php';
 
 $error = '';
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    $role = $_SESSION['role'];
-    header("Location: {$role}_dashboard.php");
+    header("Location: dashboard.php");
     exit();
 }
 
@@ -45,9 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Could implement "remember me" functionality here
                 }
                 
-                // Redirect based on role
-                $redirect = $user['role'] . '_dashboard.php';
-                header("Location: $redirect");
+                // Redirect to unified dashboard
+                header("Location: dashboard.php");
                 exit();
             } else {
                 $error = 'Invalid email or password.';
@@ -64,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SkillShare Local</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/ui/favicon.svg">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -276,6 +278,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 10px;
             border: none;
             margin-bottom: 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .alert-danger {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background-color: #efe;
+            color: #2a2;
+            border-left: 4px solid #2a2;
+            font-weight: 500;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .logo-icon {
@@ -405,22 +433,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const loginForm = document.getElementById('loginForm');
         
         loginForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            
             // Remove previous validation
             loginForm.classList.remove('was-validated');
             
             // Check validity
             if (!loginForm.checkValidity()) {
+                event.preventDefault();
                 event.stopPropagation();
                 loginForm.classList.add('was-validated');
                 return;
             }
-            
-            // Get form values
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('rememberMe').checked;
             
             // Add loading state to button
             const submitBtn = loginForm.querySelector('button[type="submit"]');
@@ -428,16 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Logging in...';
             submitBtn.disabled = true;
             
-            // Simulate API call (remove this when implementing actual functionality)
-            setTimeout(() => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                
-                // Example: Show error message
-                showAlert('This is a demo. Backend functionality not yet implemented.', 'info');
-            }, 1500);
-            
-            console.log('Form submitted:', { email, password, remember });
+            // Allow form to submit normally to server
         });
         
         // Show alert function

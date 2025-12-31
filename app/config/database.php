@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Connection and CRUD Functions
+ * Database Connection and CRUD Functions - PDO Version
  * Simple university-level database operations
  */
 
@@ -19,27 +19,25 @@ global $conn;
 function db_insert($table, $data) {
     global $conn;
     
-    // Prepare column names and values
-    $columns = implode(', ', array_keys($data));
-    $placeholders = implode(', ', array_fill(0, count($data), '?'));
-    
-    $sql = "INSERT INTO $table ($columns) VALUES ($placeholders)";
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+    try {
+        // Prepare column names and placeholders
+        $columns = implode(', ', array_keys($data));
+        $placeholders = ':' . implode(', :', array_keys($data));
+        
+        $sql = "INSERT INTO $table ($columns) VALUES ($placeholders)";
+        $stmt = $conn->prepare($sql);
+        
+        // Bind parameters
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        
+        $stmt->execute();
+        return $conn->lastInsertId();
+    } catch (PDOException $e) {
+        error_log("DB Insert Error: " . $e->getMessage());
         return false;
     }
-    
-    // Bind parameters dynamically
-    $types = str_repeat('s', count($data)); // All strings for simplicity
-    $values = array_values($data);
-    $stmt->bind_param($types, ...$values);
-    
-    if ($stmt->execute()) {
-        return $conn->insert_id;
-    }
-    
-    return false;
 }
 
 /**
@@ -47,46 +45,45 @@ function db_insert($table, $data) {
  * 
  * @param string $table - Table name
  * @param array $conditions - WHERE conditions (column => value)
+ * @param int $limit - Limit number of results (0 = no limit)
  * @param string $columns - Columns to select (default: *)
  * @return array|false - Array of results or false on failure
  */
-function db_select($table, $conditions = [], $columns = '*') {
+function db_select($table, $conditions = [], $limit = 0, $columns = '*') {
     global $conn;
     
-    $sql = "SELECT $columns FROM $table";
-    
-    // Add WHERE clause if conditions exist
-    if (!empty($conditions)) {
-        $where = [];
-        foreach ($conditions as $column => $value) {
-            $where[] = "$column = ?";
+    try {
+        $sql = "SELECT $columns FROM $table";
+        
+        // Add WHERE clause if conditions exist
+        if (!empty($conditions)) {
+            $where = [];
+            foreach ($conditions as $column => $value) {
+                $where[] = "$column = :$column";
+            }
+            $sql .= " WHERE " . implode(' AND ', $where);
         }
-        $sql .= " WHERE " . implode(' AND ', $where);
-    }
-    
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+        
+        // Add LIMIT clause if specified
+        if ($limit > 0) {
+            $sql .= " LIMIT $limit";
+        }
+        
+        $stmt = $conn->prepare($sql);
+        
+        // Bind parameters if conditions exist
+        if (!empty($conditions)) {
+            foreach ($conditions as $column => $value) {
+                $stmt->bindValue(":$column", $value);
+            }
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("DB Select Error: " . $e->getMessage());
         return false;
     }
-    
-    // Bind parameters if conditions exist
-    if (!empty($conditions)) {
-        $types = str_repeat('s', count($conditions));
-        $values = array_values($conditions);
-        $stmt->bind_param($types, ...$values);
-    }
-    
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    // Fetch all results as associative array
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    
-    return $data;
 }
 
 /**
@@ -113,31 +110,37 @@ function db_select_one($table, $conditions, $columns = '*') {
 function db_update($table, $data, $conditions) {
     global $conn;
     
-    // Prepare SET clause
-    $set = [];
-    foreach ($data as $column => $value) {
-        $set[] = "$column = ?";
-    }
-    
-    // Prepare WHERE clause
-    $where = [];
-    foreach ($conditions as $column => $value) {
-        $where[] = "$column = ?";
-    }
-    
-    $sql = "UPDATE $table SET " . implode(', ', $set) . " WHERE " . implode(' AND ', $where);
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+    try {
+        // Prepare SET clause
+        $set = [];
+        foreach ($data as $column => $value) {
+            $set[] = "$column = :set_$column";
+        }
+        
+        // Prepare WHERE clause
+        $where = [];
+        foreach ($conditions as $column => $value) {
+            $where[] = "$column = :where_$column";
+        }
+        
+        $sql = "UPDATE $table SET " . implode(', ', $set) . " WHERE " . implode(' AND ', $where);
+        $stmt = $conn->prepare($sql);
+        
+        // Bind SET parameters
+        foreach ($data as $column => $value) {
+            $stmt->bindValue(":set_$column", $value);
+        }
+        
+        // Bind WHERE parameters
+        foreach ($conditions as $column => $value) {
+            $stmt->bindValue(":where_$column", $value);
+        }
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("DB Update Error: " . $e->getMessage());
         return false;
     }
-    
-    // Combine data and conditions for binding
-    $values = array_merge(array_values($data), array_values($conditions));
-    $types = str_repeat('s', count($values));
-    $stmt->bind_param($types, ...$values);
-    
-    return $stmt->execute();
 }
 
 /**
@@ -150,61 +153,62 @@ function db_update($table, $data, $conditions) {
 function db_delete($table, $conditions) {
     global $conn;
     
-    // Prepare WHERE clause
-    $where = [];
-    foreach ($conditions as $column => $value) {
-        $where[] = "$column = ?";
-    }
-    
-    $sql = "DELETE FROM $table WHERE " . implode(' AND ', $where);
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+    try {
+        // Prepare WHERE clause
+        $where = [];
+        foreach ($conditions as $column => $value) {
+            $where[] = "$column = :$column";
+        }
+        
+        $sql = "DELETE FROM $table WHERE " . implode(' AND ', $where);
+        $stmt = $conn->prepare($sql);
+        
+        // Bind parameters
+        foreach ($conditions as $column => $value) {
+            $stmt->bindValue(":$column", $value);
+        }
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("DB Delete Error: " . $e->getMessage());
         return false;
     }
-    
-    $types = str_repeat('s', count($conditions));
-    $values = array_values($conditions);
-    $stmt->bind_param($types, ...$values);
-    
-    return $stmt->execute();
 }
 
 /**
  * QUERY - Execute custom SQL query
  * 
  * @param string $sql - SQL query
- * @param array $params - Parameters for prepared statement
+ * @param array $params - Parameters for prepared statement (key => value)
  * @return array|bool - Results for SELECT, true/false for others
  */
 function db_query($sql, $params = []) {
     global $conn;
     
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+    try {
+        $stmt = $conn->prepare($sql);
+        
+        // Bind parameters if provided
+        if (!empty($params)) {
+            foreach ($params as $key => $value) {
+                $param_key = is_numeric($key) ? $key + 1 : $key;
+                $stmt->bindValue($param_key, $value);
+            }
+        }
+        
+        $stmt->execute();
+        
+        // Check if query is a SELECT statement
+        if (stripos(trim($sql), 'SELECT') === 0) {
+            return $stmt->fetchAll();
+        }
+        
+        // For INSERT, UPDATE, DELETE
+        return true;
+    } catch (PDOException $e) {
+        error_log("DB Query Error: " . $e->getMessage());
         return false;
     }
-    
-    // Bind parameters if provided
-    if (!empty($params)) {
-        $types = str_repeat('s', count($params));
-        $stmt->bind_param($types, ...$params);
-    }
-    
-    $stmt->execute();
-    
-    // Check if query returns results (SELECT)
-    if ($result = $stmt->get_result()) {
-        $data = [];
-        while ($row = $result->fetch_assoc()) {
-            $data[] = $row;
-        }
-        return $data;
-    }
-    
-    // For INSERT, UPDATE, DELETE
-    return $stmt->affected_rows >= 0;
 }
 
 /**
@@ -217,33 +221,33 @@ function db_query($sql, $params = []) {
 function db_count($table, $conditions = []) {
     global $conn;
     
-    $sql = "SELECT COUNT(*) as count FROM $table";
-    
-    if (!empty($conditions)) {
-        $where = [];
-        foreach ($conditions as $column => $value) {
-            $where[] = "$column = ?";
+    try {
+        $sql = "SELECT COUNT(*) as count FROM $table";
+        
+        if (!empty($conditions)) {
+            $where = [];
+            foreach ($conditions as $column => $value) {
+                $where[] = "$column = :$column";
+            }
+            $sql .= " WHERE " . implode(' AND ', $where);
         }
-        $sql .= " WHERE " . implode(' AND ', $where);
-    }
-    
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
+        
+        $stmt = $conn->prepare($sql);
+        
+        if (!empty($conditions)) {
+            foreach ($conditions as $column => $value) {
+                $stmt->bindValue(":$column", $value);
+            }
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch();
+        
+        return (int)$row['count'];
+    } catch (PDOException $e) {
+        error_log("DB Count Error: " . $e->getMessage());
         return 0;
     }
-    
-    if (!empty($conditions)) {
-        $types = str_repeat('s', count($conditions));
-        $values = array_values($conditions);
-        $stmt->bind_param($types, ...$values);
-    }
-    
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    
-    return (int)$row['count'];
 }
 
 /**
@@ -251,14 +255,7 @@ function db_count($table, $conditions = []) {
  */
 function db_close() {
     global $conn;
-    if ($conn) {
-        $conn->close();
-    }
-}
-
-// Helper function to escape output (XSS prevention)
-function escape($string) {
-    return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    $conn = null;
 }
 
 ?>

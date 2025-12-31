@@ -540,7 +540,7 @@ require_once __DIR__ . '/../app/models/User.php';
             // Count by fee type
             $stmt = $conn->query("
                 SELECT 
-                    CASE WHEN fee > 0 THEN 'Paid' ELSE 'Free' END as fee_type,
+                    fee_type,
                     COUNT(*) as count 
                 FROM skill_sessions 
                 GROUP BY fee_type

@@ -1,59 +1,23 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
+require_once '../app/controllers/AuthController.php';
 require_once '../app/includes/helpers.php';
 
 $error = '';
 
 // Redirect if already logged in
-if (isset($_SESSION['user_id'])) {
-    header("Location: dashboard.php");
-    exit();
+if (AuthController::isAuthenticated()) {
+    redirect('dashboard.php');
 }
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $remember = isset($_POST['remember']);
+    $result = AuthController::handleLogin();
     
-    // Server-side validation
-    if (empty($email) || empty($password)) {
-        $error = 'Email and password are required.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Invalid email format.';
+    if ($result['success']) {
+        redirect($result['redirect']);
     } else {
-        // Find user by email
-        $user = db_select_one('Users', ['email' => $email]);
-        
-        if ($user) {
-            // Check if account is suspended
-            if ($user['is_suspended']) {
-                $error = 'Your account has been suspended. Reason: ' . $user['suspended_reason'];
-            } 
-            // Verify password
-            elseif (password_verify($password, $user['password_hash'])) {
-                // Password correct - create session
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role'];
-                $_SESSION['city'] = $user['city'];
-                
-                // Set remember me cookie (optional - for future implementation)
-                if ($remember) {
-                    // Could implement "remember me" functionality here
-                }
-                
-                // Redirect to unified dashboard
-                header("Location: dashboard.php");
-                exit();
-            } else {
-                $error = 'Invalid email or password.';
-            }
-        } else {
-            $error = 'Invalid email or password.';
-        }
+        $error = $result['message'];
     }
 }
 ?>

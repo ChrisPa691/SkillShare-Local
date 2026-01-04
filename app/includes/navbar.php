@@ -205,7 +205,7 @@ function navbar_is_active($page) {
                 <?php elseif ($user_role === 'learner'): ?>
                     <!-- Learner Navigation -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('learner_dashboard.php'); ?>" href="learner_dashboard.php">
+                        <a class="nav-link <?php echo navbar_is_active('dashboard.php'); ?>" href="dashboard.php">
                             <i class="fas fa-home"></i>Dashboard
                         </a>
                     </li>
@@ -223,30 +223,30 @@ function navbar_is_active($page) {
                 <?php elseif ($user_role === 'instructor'): ?>
                     <!-- Instructor Navigation -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('instructor_dashboard.php'); ?>" href="instructor_dashboard.php">
+                        <a class="nav-link <?php echo navbar_is_active('dashboard.php'); ?>" href="dashboard.php">
                             <i class="fas fa-home"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('my_sessions.php'); ?>" href="my_sessions.php">
-                            <i class="fas fa-chalkboard-teacher"></i>My Sessions
+                        <a class="nav-link <?php echo navbar_is_active('sessions.php'); ?>" href="sessions.php">
+                            <i class="fas fa-book-open"></i>Browse Sessions
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('create_session.php'); ?>" href="create_session.php">
+                        <a class="nav-link <?php echo navbar_is_active('session_create.php'); ?>" href="session_create.php">
                             <i class="fas fa-plus-circle"></i>Create Session
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('session_bookings.php'); ?>" href="session_bookings.php">
-                            <i class="fas fa-users"></i>Bookings
+                        <a class="nav-link <?php echo navbar_is_active('my_bookings.php'); ?>" href="my_bookings.php">
+                            <i class="fas fa-calendar-check"></i>My Bookings
                         </a>
                     </li>
                     
                 <?php elseif ($user_role === 'admin'): ?>
                     <!-- Admin Navigation -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo navbar_is_active('admin_dashboard.php'); ?>" href="admin_dashboard.php">
+                        <a class="nav-link <?php echo navbar_is_active('dashboard.php'); ?>" href="dashboard.php">
                             <i class="fas fa-tachometer-alt"></i>Dashboard
                         </a>
                     </li>

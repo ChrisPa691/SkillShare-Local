@@ -103,15 +103,15 @@ skillshare-local/
    - Update the database credentials if needed:
      ```php
      // Default XAMPP settings
-     $host = 'localhost';
-     $dbname = 'skillshare_local';
-     $username = 'root';
+     $host = 'localhost'; // Change based on your settings
+     $dbname = 'schema'; 
+     $username = ''; // Change based on your settings
      $password = '';  // Empty for default XAMPP
      ```
 
 6. **Access the Application**
    - Open your web browser
-   - Navigate to: `http://localhost/SkillShare-Local/public/`
+   - Navigate to: `http://localhost/SkillShare-Local/`
    - You should see the landing page
 
 7. **Create Admin Account** (Optional)

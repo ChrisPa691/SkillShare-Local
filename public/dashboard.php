@@ -8,6 +8,9 @@ session_start();
 require_once '../app/config/database.php';
 require_once '../app/includes/auth_guard.php';
 require_once '../app/includes/helpers.php';
+require_once '../app/models/Booking.php';
+require_once '../app/models/Session.php';
+require_once '../app/models/Rating.php';
 
 // Require authentication
 require_login();
@@ -18,6 +21,45 @@ $user_name = get_user_name();
 $user_email = get_user_email();
 $role = get_user_role();
 $city = get_user_city();
+
+// Fetch role-specific data
+if ($role === 'learner') {
+    // Get learner's bookings
+    $my_bookings = Booking::getBookingsByLearner($user_id);
+    
+    // Get sessions to rate (accepted bookings for completed sessions without ratings)
+    $sessions_to_rate = [];
+    if ($my_bookings) {
+        foreach ($my_bookings as $booking) {
+            if ($booking['status'] === 'accepted' && $booking['session_status'] === 'completed') {
+                // Check if rating exists
+                $existing_rating = Rating::getRatingByLearnerAndSession($user_id, $booking['session_id']);
+                if (!$existing_rating) {
+                    $sessions_to_rate[] = $booking;
+                }
+            }
+        }
+    }
+} elseif ($role === 'instructor') {
+    // Get instructor's sessions
+    $my_sessions = Session::getSessionsByInstructor($user_id);
+    
+    // Get instructor stats
+    $instructor_stats = Session::getInstructorStats($user_id);
+    
+    // Get pending booking requests across all instructor's sessions
+    $pending_requests = [];
+    if ($my_sessions) {
+        foreach ($my_sessions as $session) {
+            $session_bookings = Booking::getBookingsBySession($session['session_id'], 'pending');
+            if ($session_bookings) {
+                foreach ($session_bookings as $booking) {
+                    $pending_requests[] = $booking;
+                }
+            }
+        }
+    }
+}
 
 // Set page title based on role
 $page_title = ucfirst($role) . " Dashboard";
@@ -243,9 +285,45 @@ include '../app/includes/navbar.php';
             <div class="col-md-6 mb-4">
                 <div class="dashboard-card">
                     <h3><i class="fas fa-bookmark"></i> My Bookings</h3>
-                    <div class="empty-state">
-                        <p class="text-muted">No bookings to display</p>
-                    </div>
+                    <?php if ($my_bookings && count($my_bookings) > 0): ?>
+                        <?php foreach (array_slice($my_bookings, 0, 3) as $booking): ?>
+                            <div class="booking-item" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 1rem;">
+                                            <a href="session_view.php?id=<?php echo $booking['session_id']; ?>" style="text-decoration: none; color: #667eea;">
+                                                <?php echo escape($booking['session_title']); ?>
+                                            </a>
+                                        </h5>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> <?php echo format_datetime($booking['event_datetime']); ?>
+                                        </small><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> <?php echo escape($booking['instructor_name']); ?>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <?php if ($booking['status'] === 'pending'): ?>
+                                            <span class="badge bg-warning">Pending</span>
+                                        <?php elseif ($booking['status'] === 'accepted'): ?>
+                                            <span class="badge bg-success">Confirmed</span>
+                                        <?php elseif ($booking['status'] === 'rejected'): ?>
+                                            <span class="badge bg-danger">Rejected</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (count($my_bookings) > 3): ?>
+                            <div class="text-center mt-3">
+                                <a href="my_bookings.php" class="btn btn-sm btn-outline-primary">View All (<?php echo count($my_bookings); ?>)</a>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <p class="text-muted">No bookings to display</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -253,10 +331,29 @@ include '../app/includes/navbar.php';
             <div class="col-md-6 mb-4">
                 <div class="dashboard-card">
                     <h3><i class="fas fa-star"></i> Rate Completed Sessions</h3>
-                    <div class="empty-state">
-                        <p class="text-muted">No sessions to rate yet</p>
-                        <small>Complete sessions to leave ratings</small>
-                    </div>
+                    <?php if ($sessions_to_rate && count($sessions_to_rate) > 0): ?>
+                        <?php foreach (array_slice($sessions_to_rate, 0, 3) as $session): ?>
+                            <div class="session-to-rate" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                                <h5 style="margin: 0; font-size: 1rem;"><?php echo escape($session['session_title']); ?></h5>
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> <?php echo escape($session['instructor_name']); ?>
+                                </small><br>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-check"></i> Completed: <?php echo format_date($session['event_datetime']); ?>
+                                </small>
+                                <div class="mt-2">
+                                    <a href="rate_session.php?session_id=<?php echo $session['session_id']; ?>" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-star"></i> Rate Now
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <p class="text-muted">No sessions to rate yet</p>
+                            <small>Complete sessions to leave ratings</small>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -290,15 +387,15 @@ include '../app/includes/navbar.php';
                 <div class="dashboard-card">
                     <h3><i class="fas fa-chart-bar"></i> Your Impact</h3>
                     <div class="stat-box">
-                        <p class="stat-number">0</p>
+                        <p class="stat-number"><?php echo $instructor_stats['active_sessions'] ?? 0; ?></p>
                         <p class="stat-label">Active Sessions</p>
                     </div>
                     <div class="stat-box">
-                        <p class="stat-number">0</p>
+                        <p class="stat-number"><?php echo $instructor_stats['total_learners'] ?? 0; ?></p>
                         <p class="stat-label">Total Learners</p>
                     </div>
                     <div class="stat-box">
-                        <p class="stat-number">0.0</p>
+                        <p class="stat-number"><?php echo number_format($instructor_stats['avg_rating'] ?? 0, 1); ?></p>
                         <p class="stat-label">Average Rating</p>
                     </div>
                 </div>
@@ -308,13 +405,54 @@ include '../app/includes/navbar.php';
             <div class="col-md-8 mb-4">
                 <div class="dashboard-card">
                     <h3><i class="fas fa-chalkboard-teacher"></i> My Sessions</h3>
-                    <div class="empty-state">
-                        <i class="fas fa-chalkboard"></i>
-                        <p>You haven't created any sessions yet.</p>
-                        <a href="session_create.php" class="action-btn">
-                            <i class="fas fa-plus-circle"></i> Create Your First Session
-                        </a>
-                    </div>
+                    <?php if ($my_sessions && count($my_sessions) > 0): ?>
+                        <?php foreach (array_slice($my_sessions, 0, 3) as $session): ?>
+                            <div class="session-item" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 style="margin: 0; font-size: 1rem;">
+                                            <a href="session_view.php?id=<?php echo $session['session_id']; ?>" style="text-decoration: none; color: #667eea;">
+                                                <?php echo escape($session['title']); ?>
+                                            </a>
+                                        </h5>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> <?php echo format_datetime($session['event_datetime']); ?>
+                                        </small><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-users"></i> <?php echo $session['capacity_remaining']; ?>/<?php echo $session['max_capacity']; ?> spots available
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <?php if ($session['status'] === 'upcoming'): ?>
+                                            <span class="badge bg-primary">Upcoming</span>
+                                        <?php elseif ($session['status'] === 'completed'): ?>
+                                            <span class="badge bg-success">Completed</span>
+                                        <?php elseif ($session['status'] === 'cancelled'): ?>
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="session_edit.php?id=<?php echo $session['session_id']; ?>" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (count($my_sessions) > 3): ?>
+                            <div class="text-center mt-3">
+                                <a href="my_sessions.php" class="btn btn-sm btn-outline-primary">View All (<?php echo count($my_sessions); ?>)</a>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="fas fa-chalkboard"></i>
+                            <p>You haven't created any sessions yet.</p>
+                            <a href="session_create.php" class="action-btn">
+                                <i class="fas fa-plus-circle"></i> Create Your First Session
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -322,9 +460,40 @@ include '../app/includes/navbar.php';
             <div class="col-md-6 mb-4">
                 <div class="dashboard-card">
                     <h3><i class="fas fa-bell"></i> Pending Booking Requests</h3>
-                    <div class="empty-state">
-                        <p class="text-muted">No pending requests</p>
-                    </div>
+                    <?php if ($pending_requests && count($pending_requests) > 0): ?>
+                        <?php foreach (array_slice($pending_requests, 0, 5) as $request): ?>
+                            <div class="booking-request" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 style="margin: 0; font-size: 0.95rem;"><?php echo escape($request['learner_name']); ?></h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-book"></i> <?php echo escape($request['session_title']); ?>
+                                        </small><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> <?php echo time_ago($request['booked_at']); ?>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="booking_manage.php?id=<?php echo $request['booking_id']; ?>&action=accept" class="btn btn-sm btn-success" title="Accept">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="booking_manage.php?id=<?php echo $request['booking_id']; ?>&action=reject" class="btn btn-sm btn-danger" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (count($pending_requests) > 5): ?>
+                            <div class="text-center mt-3">
+                                <a href="booking_requests.php" class="btn btn-sm btn-outline-primary">View All (<?php echo count($pending_requests); ?>)</a>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <p class="text-muted">No pending requests</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 

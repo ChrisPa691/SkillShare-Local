@@ -1,4 +1,9 @@
+#Files to ignore
 TODO.md
+testing/
+docs/
+SkillShare.session.sql
+DB Testing.session.sql
 
 # Environment files
 .env
@@ -14,5 +19,3 @@ public/assets/images/sessions/*
 # OS files
 .DS_Store
 Thumbs.db
-docs/
-SkillShare.session.sql

@@ -1,347 +1,351 @@
 <?php
 /**
  * Session Controller
- * Handles all session-related business logic and request processing
+ * Handles all session-related business logic and form processing
  */
 
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Session.php';
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/Booking.php';
-require_once __DIR__ . '/../models/Rating.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/auth_guard.php';
 
 class SessionController {
     
     /**
-     * Display all sessions with filters
-     * GET /sessions.php
+     * Handle session creation
      * 
-     * @return void - Renders sessions view
+     * @return array - ['success' => bool, 'message' => string, 'session_id' => int|null]
      */
-    public static function index() {
-        // TODO: Get filter parameters from $_GET:
-        // - category_id (int or null)
-        // - location_type ('online', 'in-person', or null)
-        // - fee_type ('free', 'paid', or null)
-        // - city (string or null)
-        // - search (string or null)
+    public static function handleCreate() {
+        // Ensure user is logged in and is an instructor
+        require_login();
+        if (!is_instructor()) {
+            return [
+                'success' => false,
+                'message' => 'Only instructors can create sessions',
+                'session_id' => null
+            ];
+        }
         
-        // TODO: Build filters array from $_GET parameters
-        // TODO: Call Session::getAllSessions($filters)
+        // Validate required fields
+        $validation = self::validateSessionData($_POST, true);
+        if (!$validation['valid']) {
+            return [
+                'success' => false,
+                'message' => implode('<br>', $validation['errors']),
+                'session_id' => null
+            ];
+        }
         
-        // TODO: Get all categories for filter dropdown
-        // - Use db_select('Categories', [], 'ORDER BY category_name ASC')
+        // Handle photo upload
+        $photoUrl = self::handlePhotoUpload();
         
-        // TODO: Get all unique cities for filter dropdown
-        // - SELECT DISTINCT city FROM skill_sessions WHERE city IS NOT NULL
+        // Prepare session data
+        $sessionData = [
+            'instructor_id' => get_user_id(),
+            'category_id' => (int)$_POST['category_id'],
+            'title' => trim($_POST['title']),
+            'description' => trim($_POST['description']),
+            'duration_minutes' => (int)$_POST['duration_minutes'],
+            'fee_type' => $_POST['fee_type'],
+            'fee_amount' => $_POST['fee_type'] === 'paid' ? (float)$_POST['fee_amount'] : 0,
+            'location_type' => $_POST['location_type'],
+            'event_datetime' => $_POST['event_datetime'],
+            'total_capacity' => (int)$_POST['total_capacity'],
+            'sustainability_description' => trim($_POST['sustainability_description'] ?? '')
+        ];
         
-        // TODO: Store results in variables for view
-        // - $sessions
-        // - $categories
-        // - $cities
-        // - $current_filters (for maintaining filter state)
+        // Add location-specific fields
+        if ($_POST['location_type'] === 'online') {
+            $sessionData['online_link'] = trim($_POST['online_link']);
+            $sessionData['city'] = null;
+            $sessionData['address'] = null;
+        } else {
+            $sessionData['city'] = trim($_POST['city']);
+            $sessionData['address'] = trim($_POST['address']);
+            $sessionData['online_link'] = null;
+        }
         
-        // TODO: Include view file (sessions.php will access these variables)
+        // Add photo URL if uploaded
+        if ($photoUrl) {
+            $sessionData['photo_url'] = $photoUrl;
+        }
+        
+        // Create session
+        $sessionId = Session::createSession($sessionData);
+        
+        if ($sessionId) {
+            return [
+                'success' => true,
+                'message' => 'Session created successfully!',
+                'session_id' => $sessionId
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to create session. Please try again.',
+                'session_id' => null
+            ];
+        }
     }
     
     /**
-     * Display single session detail
-     * GET /session_view.php?id=123
-     * 
-     * @param int $session_id - Session ID from $_GET
-     * @return void - Renders session detail view
-     */
-    public static function show($session_id) {
-        // TODO: Validate $session_id is numeric
-        // TODO: Call Session::getSessionById($session_id)
-        // TODO: If not found, redirect to sessions.php with error message
-        
-        // TODO: Get instructor details from Users table
-        // - Use User::getUserById($session['instructor_id'])
-        
-        // TODO: Get all ratings for this session
-        // - Use Rating::getRatingsBySession($session_id)
-        
-        // TODO: If user is logged in, check if they already booked this session
-        // - Use Booking::getBookingByLearnerAndSession($_SESSION['user_id'], $session_id)
-        
-        // TODO: Check if session is full (capacity_remaining <= 0)
-        
-        // TODO: Store results in variables:
-        // - $session
-        // - $instructor
-        // - $ratings
-        // - $user_booking (or null)
-        // - $is_full
-        // - $can_book (learner, not full, not already booked)
-        
-        // TODO: Include view file (session_view.php will access these variables)
-    }
-    
-    /**
-     * Create new session (instructor only)
-     * POST /instructor_dashboard.php (create session form)
-     * 
-     * @return void - Redirects after creation
-     */
-    public static function create() {
-        // TODO: Check if user is logged in and is instructor
-        // - if (!is_logged_in() || get_user_role() !== 'instructor') redirect
-        
-        // TODO: Validate CSRF token (security)
-        
-        // TODO: Validate all required fields from $_POST:
-        // - title (required, 3-100 chars)
-        // - description (required, min 20 chars)
-        // - category_id (required, must exist)
-        // - duration_minutes (required, 15-480 range)
-        // - fee_type (required, 'free' or 'paid')
-        // - fee_amount (required if paid, must be > 0)
-        // - location_type (required, 'online' or 'in-person')
-        // - city (required if in-person)
-        // - address (required if in-person)
-        // - online_link (required if online, must be valid URL)
-        // - event_datetime (required, must be future)
-        // - total_capacity (required, 1-100 range)
-        // - sustainability_description (optional)
-        
-        // TODO: Sanitize all inputs using escape() or htmlspecialchars()
-        
-        // TODO: Handle photo upload if provided
-        // - Validate file type (jpg, png, gif only)
-        // - Validate file size (max 2MB)
-        // - Generate unique filename
-        // - Move to public/assets/images/sessions/
-        // - Store relative path in database
-        
-        // TODO: Build $data array with all fields
-        // - Add instructor_id = $_SESSION['user_id']
-        // - Set capacity_remaining = total_capacity
-        // - Set status = 'upcoming'
-        // - Add created_at timestamp
-        
-        // TODO: Call Session::createSession($data)
-        
-        // TODO: If successful:
-        // - Set success message in session
-        // - Redirect to instructor_dashboard.php
-        
-        // TODO: If failed:
-        // - Set error message in session
-        // - Redirect back to form with old input
-    }
-    
-    /**
-     * Update existing session (instructor only)
-     * POST /instructor_dashboard.php (edit session form)
+     * Handle session update
      * 
      * @param int $session_id - Session ID to update
-     * @return void - Redirects after update
+     * @return array - ['success' => bool, 'message' => string]
      */
-    public static function update($session_id) {
-        // TODO: Check if user is logged in and is instructor
+    public static function handleUpdate($session_id) {
+        // Ensure user is logged in
+        require_login();
         
-        // TODO: Get existing session
-        // TODO: Verify that current user is the instructor of this session
-        // - if ($session['instructor_id'] !== $_SESSION['user_id']) redirect with error
+        // Verify session exists and user owns it
+        $session = Session::getSessionById($session_id);
+        if (!$session) {
+            return [
+                'success' => false,
+                'message' => 'Session not found'
+            ];
+        }
         
-        // TODO: Validate CSRF token
+        // Check ownership (or admin)
+        if ($session['instructor_id'] != get_user_id() && !is_admin()) {
+            return [
+                'success' => false,
+                'message' => 'You do not have permission to edit this session'
+            ];
+        }
         
-        // TODO: Validate all fields (same as create, but all optional except session_id)
+        // Validate data
+        $validation = self::validateSessionData($_POST, false);
+        if (!$validation['valid']) {
+            return [
+                'success' => false,
+                'message' => implode('<br>', $validation['errors'])
+            ];
+        }
         
-        // TODO: Sanitize inputs
+        // Handle photo upload if new photo provided
+        $photoUrl = self::handlePhotoUpload();
         
-        // TODO: Handle photo upload if new photo provided
-        // - Delete old photo file if it exists
-        // - Upload new photo
+        // Prepare update data
+        $updateData = [];
         
-        // TODO: Build $data array with only changed fields
-        // - Add updated_at timestamp
+        if (isset($_POST['category_id'])) $updateData['category_id'] = (int)$_POST['category_id'];
+        if (isset($_POST['title'])) $updateData['title'] = trim($_POST['title']);
+        if (isset($_POST['description'])) $updateData['description'] = trim($_POST['description']);
+        if (isset($_POST['duration_minutes'])) $updateData['duration_minutes'] = (int)$_POST['duration_minutes'];
         
-        // TODO: Call Session::updateSession($session_id, $data)
+        if (isset($_POST['fee_type'])) {
+            $updateData['fee_type'] = $_POST['fee_type'];
+            $updateData['fee_amount'] = $_POST['fee_type'] === 'paid' ? (float)$_POST['fee_amount'] : 0;
+        }
         
-        // TODO: If successful, redirect with success message
-        // TODO: If failed, redirect with error message
+        if (isset($_POST['location_type'])) {
+            $updateData['location_type'] = $_POST['location_type'];
+            
+            if ($_POST['location_type'] === 'online') {
+                $updateData['online_link'] = trim($_POST['online_link']);
+                $updateData['city'] = null;
+                $updateData['address'] = null;
+            } else {
+                $updateData['city'] = trim($_POST['city']);
+                $updateData['address'] = trim($_POST['address']);
+                $updateData['online_link'] = null;
+            }
+        }
+        
+        if (isset($_POST['event_datetime'])) $updateData['event_datetime'] = $_POST['event_datetime'];
+        if (isset($_POST['total_capacity'])) $updateData['total_capacity'] = (int)$_POST['total_capacity'];
+        if (isset($_POST['sustainability_description'])) $updateData['sustainability_description'] = trim($_POST['sustainability_description']);
+        
+        // Add photo URL if uploaded
+        if ($photoUrl) {
+            $updateData['photo_url'] = $photoUrl;
+        }
+        
+        // Update session
+        $updated = Session::updateSession($session_id, $updateData);
+        
+        if ($updated) {
+            return [
+                'success' => true,
+                'message' => 'Session updated successfully!'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to update session. Please try again.'
+            ];
+        }
     }
     
     /**
-     * Cancel/Delete session (instructor or admin)
-     * POST /instructor_dashboard.php or /admin_dashboard.php
+     * Handle session deletion (soft delete)
      * 
-     * @param int $session_id - Session ID to cancel
-     * @return void - Redirects after cancellation
+     * @param int $session_id - Session ID to delete
+     * @return array - ['success' => bool, 'message' => string]
      */
-    public static function cancel($session_id) {
-        // TODO: Check if user is logged in
+    public static function handleDelete($session_id) {
+        require_login();
         
-        // TODO: Get session details
+        $session = Session::getSessionById($session_id);
+        if (!$session) {
+            return ['success' => false, 'message' => 'Session not found'];
+        }
         
-        // TODO: Check authorization:
-        // - If instructor: must be session owner
-        // - If admin: can cancel any session
-        // - Else: redirect with error
+        if ($session['instructor_id'] != get_user_id() && !is_admin()) {
+            return ['success' => false, 'message' => 'You do not have permission to delete this session'];
+        }
         
-        // TODO: Validate CSRF token
+        $deleted = Session::deleteSession($session_id);
         
-        // TODO: Get cancellation reason from $_POST (optional)
-        
-        // TODO: Check if session has bookings
-        // - If yes, notify learners (future enhancement with email)
-        
-        // TODO: Call Session::deleteSession($session_id, $reason)
-        
-        // TODO: Log admin action if admin cancelled it
-        // - INSERT into admin_actions
-        
-        // TODO: Redirect with success message
+        if ($deleted) {
+            return ['success' => true, 'message' => 'Session canceled successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Failed to cancel session. Please try again.'];
+        }
     }
     
     /**
-     * Mark session as completed (system/admin)
-     * POST /admin_dashboard.php
+     * Validate session data
      * 
-     * @param int $session_id - Session ID
-     * @return void
+     * @param array $data - POST data
+     * @param bool $isCreate - True for create, false for update
+     * @return array - ['valid' => bool, 'errors' => array]
      */
-    public static function markCompleted($session_id) {
-        // TODO: Check if user is admin
+    private static function validateSessionData($data, $isCreate = true) {
+        $errors = [];
         
-        // TODO: Get session details
-        // TODO: Verify session event_datetime has passed
+        if ($isCreate) {
+            if (empty($data['category_id'])) $errors[] = 'Category is required';
+            if (empty($data['title']) || strlen(trim($data['title'])) < 3) $errors[] = 'Title must be at least 3 characters';
+            if (empty($data['description']) || strlen(trim($data['description'])) < 10) $errors[] = 'Description must be at least 10 characters';
+            if (empty($data['duration_minutes']) || $data['duration_minutes'] < 15) $errors[] = 'Duration must be at least 15 minutes';
+            if (empty($data['fee_type']) || !in_array($data['fee_type'], ['free', 'paid'])) $errors[] = 'Invalid fee type';
+            if (empty($data['location_type']) || !in_array($data['location_type'], ['online', 'in-person'])) $errors[] = 'Invalid location type';
+            if (empty($data['event_datetime'])) $errors[] = 'Event date and time are required';
+            if (empty($data['total_capacity']) || $data['total_capacity'] < 1) $errors[] = 'Capacity must be at least 1';
+        }
         
-        // TODO: Update status to 'completed'
-        // - Use Session::updateSession($session_id, ['status' => 'completed'])
+        if (!empty($data['fee_type']) && $data['fee_type'] === 'paid') {
+            if (empty($data['fee_amount']) || $data['fee_amount'] <= 0) $errors[] = 'Fee amount is required for paid sessions';
+        }
         
-        // TODO: Log admin action
+        if (!empty($data['location_type'])) {
+            if ($data['location_type'] === 'online') {
+                if (empty($data['online_link'])) $errors[] = 'Online meeting link is required for online sessions';
+            } else {
+                if (empty($data['city'])) $errors[] = 'City is required for in-person sessions';
+                if (empty($data['address'])) $errors[] = 'Address is required for in-person sessions';
+            }
+        }
         
-        // TODO: Redirect with success message
+        if (!empty($data['event_datetime'])) {
+            $eventTime = strtotime($data['event_datetime']);
+            if ($eventTime < time()) $errors[] = 'Event date must be in the future';
+        }
+        
+        return ['valid' => empty($errors), 'errors' => $errors];
     }
     
     /**
-     * Get sessions for instructor dashboard (AJAX)
-     * GET /instructor_dashboard.php?ajax=get_my_sessions
+     * Handle photo upload
      * 
-     * @param int $instructor_id - Instructor user ID
-     * @return json - JSON response with sessions
+     * @return string|null - Photo URL or null if no upload
      */
-    public static function getInstructorSessions($instructor_id) {
-        // TODO: Check if user is logged in and is instructor
+    private static function handlePhotoUpload() {
+        if (!isset($_FILES['session_photo']) || $_FILES['session_photo']['error'] === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
         
-        // TODO: Get filter from $_GET (upcoming, completed, all)
+        if ($_FILES['session_photo']['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
         
-        // TODO: Call Session::getSessionsByInstructor($instructor_id, $status)
+        $file = $_FILES['session_photo'];
         
-        // TODO: Return JSON response
-        // - header('Content-Type: application/json')
-        // - echo json_encode(['success' => true, 'sessions' => $sessions])
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            return null;
+        }
+        
+        if ($file['size'] > 5 * 1024 * 1024) {
+            return null;
+        }
+        
+        $uploadDir = __DIR__ . '/../../public/assets/images/sessions/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'session_' . time() . '_' . uniqid() . '.' . $extension;
+        $uploadPath = $uploadDir . $filename;
+        
+        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            return 'assets/images/sessions/' . $filename;
+        }
+        
+        return null;
     }
     
     /**
-     * Search sessions (AJAX)
-     * GET /sessions.php?ajax=search&q=keyword
+     * Get filter data for sessions page
      * 
-     * @return json - JSON response with search results
+     * @return array - Filters from GET/POST
      */
-    public static function search() {
-        // TODO: Get search keyword from $_GET['q']
-        // TODO: Sanitize and validate keyword (min 2 chars)
+    public static function getFilters() {
+        $filters = [];
         
-        // TODO: Call Session::searchSessions($keyword, 20)
+        if (!empty($_GET['search']) || !empty($_POST['search'])) {
+            $filters['search'] = trim($_GET['search'] ?? $_POST['search']);
+        }
+        if (!empty($_GET['category_id']) || !empty($_POST['category_id'])) {
+            $filters['category_id'] = (int)($_GET['category_id'] ?? $_POST['category_id']);
+        }
+        if (!empty($_GET['location_type']) || !empty($_POST['location_type'])) {
+            $filters['location_type'] = $_GET['location_type'] ?? $_POST['location_type'];
+        }
+        if (!empty($_GET['fee_type']) || !empty($_POST['fee_type'])) {
+            $filters['fee_type'] = $_GET['fee_type'] ?? $_POST['fee_type'];
+        }
+        if (!empty($_GET['city']) || !empty($_POST['city'])) {
+            $filters['city'] = trim($_GET['city'] ?? $_POST['city']);
+        }
+        if (isset($_GET['status']) || isset($_POST['status'])) {
+            $filters['status'] = $_GET['status'] ?? $_POST['status'];
+        }
         
-        // TODO: Return JSON response with results
-        // - Format for autocomplete or live search results
+        return $filters;
     }
     
     /**
-     * Get session stats for dashboard
-     * Used by instructor_dashboard.php
+     * Get all categories for dropdown
      * 
-     * @param int $instructor_id - Instructor user ID
-     * @return array - Statistics array
+     * @return array - Categories
      */
-    public static function getStats($instructor_id) {
-        // TODO: Call Session::getInstructorStats($instructor_id)
-        
-        // TODO: Return stats array for display in dashboard cards
+    public static function getCategories() {
+        return db_select('Categories', [], 0) ?: [];
     }
     
     /**
-     * Validate session form data (helper method)
+     * Get all unique cities from sessions
      * 
-     * @param array $data - Form data from $_POST
-     * @param bool $is_update - True if updating, false if creating
-     * @return array - Array of validation errors (empty if valid)
+     * @return array - Cities
      */
-    private static function validateSessionData($data, $is_update = false) {
-        // TODO: Initialize $errors array
+    public static function getCities() {
+        global $conn;
         
-        // TODO: Validate title
-        // - Required if not update
-        // - Length 3-100 chars
-        // - No special characters except basic punctuation
-        
-        // TODO: Validate description
-        // - Required if not update
-        // - Min 20 chars, max 5000 chars
-        
-        // TODO: Validate category_id
-        // - Must exist in Categories table
-        
-        // TODO: Validate duration_minutes
-        // - Must be integer
-        // - Range 15-480 (15 min to 8 hours)
-        
-        // TODO: Validate fee_type and fee_amount
-        // - fee_type must be 'free' or 'paid'
-        // - If 'free', fee_amount must be 0
-        // - If 'paid', fee_amount must be > 0
-        
-        // TODO: Validate location_type
-        // - Must be 'online' or 'in-person'
-        // - If 'online', online_link is required and must be valid URL
-        // - If 'in-person', city and address are required
-        
-        // TODO: Validate event_datetime
-        // - Must be valid datetime format
-        // - Must be in the future (at least 1 hour from now)
-        
-        // TODO: Validate capacity
-        // - Must be integer
-        // - Range 1-100
-        // - If updating, capacity_remaining should not exceed new total_capacity
-        
-        // TODO: Return $errors array
-    }
-    
-    /**
-     * Handle photo upload (helper method)
-     * 
-     * @param array $file - $_FILES['photo']
-     * @return string|false - Relative path to uploaded photo or false on failure
-     */
-    private static function handlePhotoUpload($file) {
-        // TODO: Check if file was uploaded
-        // - if ($file['error'] !== UPLOAD_ERR_OK) return false
-        
-        // TODO: Validate file type
-        // - $allowed = ['image/jpeg', 'image/png', 'image/gif']
-        // - if (!in_array($file['type'], $allowed)) return false
-        
-        // TODO: Validate file size (max 2MB)
-        // - if ($file['size'] > 2 * 1024 * 1024) return false
-        
-        // TODO: Generate unique filename
-        // - $extension = pathinfo($file['name'], PATHINFO_EXTENSION)
-        // - $filename = uniqid('session_') . '.' . $extension
-        
-        // TODO: Create upload directory if not exists
-        // - $upload_dir = __DIR__ . '/../../public/assets/images/sessions/'
-        // - if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true)
-        
-        // TODO: Move uploaded file
-        // - move_uploaded_file($file['tmp_name'], $upload_dir . $filename)
-        
-        // TODO: Return relative path for database
-        // - return 'assets/images/sessions/' . $filename
+        try {
+            $sql = "SELECT DISTINCT city FROM skill_sessions WHERE city IS NOT NULL ORDER BY city ASC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (PDOException $e) {
+            error_log("Error getting cities: " . $e->getMessage());
+            return [];
+        }
     }
 }
+

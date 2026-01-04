@@ -1,62 +1,26 @@
 <?php
 session_start();
-require_once '../app/config/database.php';
+require_once '../app/controllers/AuthController.php';
 require_once '../app/includes/helpers.php';
 
 $error = '';
 $success = '';
 
+// Redirect if already logged in
+if (AuthController::isAuthenticated()) {
+    redirect('dashboard.php');
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
-    $full_name = trim($_POST['full_name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $city = trim($_POST['city'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $role = $_POST['role'] ?? '';
-    $terms = isset($_POST['terms']);
+    $result = AuthController::handleRegister();
     
-    // Server-side validation
-    if (empty($full_name) || empty($email) || empty($city) || empty($password) || empty($role)) {
-        $error = 'All fields are required.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Invalid email format.';
-    } elseif (strlen($password) < 8) {
-        $error = 'Password must be at least 8 characters long.';
-    } elseif ($password !== $confirm_password) {
-        $error = 'Passwords do not match.';
-    } elseif (!in_array($role, ['learner', 'instructor'])) {
-        $error = 'Invalid role selected.';
-    } elseif (!$terms) {
-        $error = 'You must agree to the terms and conditions.';
+    if ($result['success']) {
+        $success = $result['message'];
+        // Redirect after 2 seconds
+        header("refresh:2;url=login.php");
     } else {
-        // Check if email already exists
-        $existing_user = db_select_one('Users', ['email' => $email]);
-        
-        if ($existing_user) {
-            $error = 'Email address already registered.';
-        } else {
-            // Hash password
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Insert user into database
-            $user_id = db_insert('Users', [
-                'full_name' => $full_name,
-                'email' => $email,
-                'password_hash' => $password_hash,
-                'role' => $role,
-                'city' => $city
-            ]);
-            
-            if ($user_id) {
-                $success = 'Registration successful! Redirecting to login...';
-                // Redirect after 2 seconds
-                header("refresh:2;url=login.php");
-            } else {
-                $error = 'Registration failed. Please try again.';
-            }
-        }
+        $error = $result['message'];
     }
 }
 ?>

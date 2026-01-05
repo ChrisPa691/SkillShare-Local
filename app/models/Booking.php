@@ -77,7 +77,9 @@ class Booking {
                        s.event_datetime,
                        s.location_type,
                        s.city,
+                       s.address,
                        s.online_link,
+                       s.status as session_status,
                        u.full_name as instructor_name
                 FROM bookings b
                 INNER JOIN skill_sessions s ON b.session_id = s.session_id
@@ -115,9 +117,12 @@ class Booking {
         
         $sql = "SELECT b.*, 
                        u.full_name as learner_name,
-                       u.email as learner_email
+                       u.email as learner_email,
+                       s.title as session_title,
+                       s.event_datetime
                 FROM bookings b
                 INNER JOIN Users u ON b.learner_id = u.user_id
+                INNER JOIN skill_sessions s ON b.session_id = s.session_id
                 WHERE b.session_id = ?";
         
         $params = [$session_id];
@@ -127,7 +132,7 @@ class Booking {
             $params[] = $status;
         }
         
-        $sql .= " ORDER BY b.booking_date DESC";
+        $sql .= " ORDER BY b.requested_at DESC";
         
         try {
             $stmt = $conn->prepare($sql);
@@ -148,14 +153,17 @@ class Booking {
     public static function createBooking($data) {
         global $conn;
         
-        $sql = "INSERT INTO bookings (session_id, learner_id, status, booking_date) 
-                VALUES (?, ?, 'pending', NOW())";
+        $num_seats = $data['num_seats'] ?? 1;
+        
+        $sql = "INSERT INTO bookings (session_id, learner_id, num_seats, status, requested_at) 
+                VALUES (?, ?, ?, 'pending', NOW())";
         
         try {
             $stmt = $conn->prepare($sql);
             $stmt->execute([
                 $data['session_id'],
-                $data['learner_id']
+                $data['learner_id'],
+                $num_seats
             ]);
             return $conn->lastInsertId();
         } catch (PDOException $e) {
@@ -168,7 +176,7 @@ class Booking {
      * Update booking status
      * 
      * @param int $booking_id - Booking ID
-     * @param string $status - New status (pending, accepted, rejected)
+     * @param string $status - New status (pending, accepted, declined, canceled)
      * @return bool - Success status
      */
     public static function updateBookingStatus($booking_id, $status) {
@@ -192,7 +200,7 @@ class Booking {
      * @return bool - Success status
      */
     public static function cancelBooking($booking_id) {
-        return self::updateBookingStatus($booking_id, 'rejected');
+        return self::updateBookingStatus($booking_id, 'canceled');
     }
     
     /**
@@ -238,7 +246,7 @@ class Booking {
                     COUNT(*) as total_bookings,
                     SUM(CASE WHEN b.status = 'pending' THEN 1 ELSE 0 END) as pending_bookings,
                     SUM(CASE WHEN b.status = 'accepted' THEN 1 ELSE 0 END) as accepted_bookings,
-                    SUM(CASE WHEN b.status = 'rejected' THEN 1 ELSE 0 END) as rejected_bookings
+                    SUM(CASE WHEN b.status = 'declined' THEN 1 ELSE 0 END) as declined_bookings
                 FROM bookings b
                 INNER JOIN skill_sessions s ON b.session_id = s.session_id
                 WHERE s.instructor_id = ?";
@@ -253,7 +261,7 @@ class Booking {
                 'total_bookings' => 0,
                 'pending_bookings' => 0,
                 'accepted_bookings' => 0,
-                'rejected_bookings' => 0
+                'declined_bookings' => 0
             ];
         }
     }

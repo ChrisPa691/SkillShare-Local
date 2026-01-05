@@ -205,8 +205,6 @@ class Session {
         // Set defaults
         $data['status'] = $data['status'] ?? 'upcoming';
         $data['capacity_remaining'] = $data['capacity_remaining'] ?? $data['total_capacity'];
-        $data['created_at'] = date('Y-m-d H:i:s');
-        $data['updated_at'] = date('Y-m-d H:i:s');
         
         // Ensure fee_amount is 0 for free sessions
         if ($data['fee_type'] === 'free') {
@@ -237,9 +235,6 @@ class Session {
      * @return bool - True on success, false on failure
      */
     public static function updateSession($session_id, $data) {
-        // Set updated_at timestamp
-        $data['updated_at'] = date('Y-m-d H:i:s');
-        
         // Ensure fee_amount is 0 for free sessions
         if (isset($data['fee_type']) && $data['fee_type'] === 'free') {
             $data['fee_amount'] = 0;

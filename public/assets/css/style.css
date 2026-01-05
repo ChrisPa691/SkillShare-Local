@@ -1,0 +1,232 @@
+/**
+ * Main Stylesheet
+ * Global styles and cookie consent banner
+ */
+
+/* ============================================
+   COOKIE CONSENT BANNER
+   ============================================ */
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 9998;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.cookie-consent-banner .consent-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cookie-consent-banner .consent-content i {
+    font-size: 1.5rem;
+    color: #ffd700;
+}
+
+.cookie-consent-banner .btn {
+    min-width: 100px;
+}
+
+.cookie-consent-banner .btn-light {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+}
+
+.cookie-consent-banner .btn-light:hover {
+    background-color: white;
+}
+
+.cookie-consent-banner .btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.cookie-consent-banner .btn-success:hover {
+    background-color: #218838;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .cookie-consent-banner .consent-content {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cookie-consent-banner .row > div:last-child {
+        text-align: center !important;
+    }
+    
+    .cookie-consent-banner .btn {
+        min-width: auto;
+        padding: 0.375rem 1rem;
+    }
+}
+
+/* ============================================
+   HEADER SHRINK EFFECT
+   ============================================ */
+.site-header {
+    transition: all 0.3s ease;
+}
+
+.site-header.shrink {
+    padding: 0.5rem 0;
+}
+
+.site-header.shrink .logo-text {
+    font-size: 1.5rem;
+}
+
+.site-header.shrink .tagline {
+    font-size: 0.8rem;
+}
+
+/* ============================================
+   NOTIFICATION STYLES
+   ============================================ */
+.alert.position-fixed {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.custom-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 300px;
+    max-width: 500px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+}
+
+.custom-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.custom-toast i {
+    font-size: 1.25rem;
+}
+
+.custom-toast span {
+    flex: 1;
+}
+
+.custom-toast .toast-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.custom-toast .toast-close:hover {
+    color: var(--text-primary);
+}
+
+/* Toast types */
+.custom-toast.toast-success {
+    border-left: 4px solid var(--color-success);
+}
+
+.custom-toast.toast-success i {
+    color: var(--color-success);
+}
+
+.custom-toast.toast-error {
+    border-left: 4px solid var(--color-danger);
+}
+
+.custom-toast.toast-error i {
+    color: var(--color-danger);
+}
+
+.custom-toast.toast-warning {
+    border-left: 4px solid var(--color-warning);
+}
+
+.custom-toast.toast-warning i {
+    color: var(--color-warning);
+}
+
+.custom-toast.toast-info {
+    border-left: 4px solid var(--color-info);
+}
+
+.custom-toast.toast-info i {
+    color: var(--color-info);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* ============================================
+   THEME SUPPORT - DEPRECATED
+   ============================================ */
+/* Theme styles have been moved to theme.css */
+/* Keeping these for backward compatibility */
+body[data-theme="dark"] {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+}
+
+body[data-theme="dark"] .card {
+    background-color: #2d2d2d;
+    color: #f0f0f0;
+}
+
+body[data-theme="dark"] .site-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}

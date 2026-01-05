@@ -11,7 +11,8 @@ require_once __DIR__ . '/../app/models/Session.php';
 require_once __DIR__ . '/../app/includes/helpers.php';
 
 // Get all categories for filter dropdown
-$categories = db_select('Categories', [], 'ORDER BY name ASC');
+$categories = db_query("SELECT category_id, name FROM Categories ORDER BY name ASC");
+$categories = $categories ? $categories : [];
 
 // Get unique cities for location filter
 $cities_result = db_query("SELECT DISTINCT city FROM skill_sessions WHERE city IS NOT NULL ORDER BY city ASC");
@@ -90,7 +91,7 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                                     <?php if ($categories): ?>
                                         <?php foreach ($categories as $category): ?>
                                             <option value="<?= $category['category_id'] ?>" <?= $current_category == $category['category_id'] ? 'selected' : '' ?>>
-                                                <?= escape($category['category_name']) ?>
+                                                <?= escape($category['name']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -191,7 +192,7 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                             </h5>
                             
                             <!-- Category Badge -->
-                            <span class="badge bg-secondary mb-2"><?= escape($session['category_name']) ?></span>
+                            <span class="badge bg-secondary mb-2"><?= escape($session['category_name'] ?? 'Uncategorized') ?></span>
                             
                             <!-- Description (truncated) -->
                             <p class="card-text text-muted small">

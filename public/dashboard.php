@@ -65,156 +65,9 @@ if ($role === 'learner') {
 $page_title = ucfirst($role) . " Dashboard";
 
 // Include header and navbar
-include '../app/includes/header.php';
-include '../app/includes/navbar.php';
+require_once '../app/includes/header.php';
+require_once '../app/includes/navbar.php';
 ?>
-
-<style>
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 40px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    
-    .dashboard-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    }
-    
-    .dashboard-card h3 {
-        color: #667eea;
-        font-weight: 700;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .dashboard-card h3 i {
-        font-size: 1.5rem;
-    }
-    
-    .stat-box {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        border-left: 4px solid #667eea;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #667eea;
-        margin: 0;
-    }
-    
-    .stat-label {
-        color: #6c757d;
-        font-size: 1rem;
-        margin: 0;
-    }
-    
-    .action-btn {
-        display: inline-block;
-        padding: 12px 30px;
-        background: linear-gradient(135deg, #28a745 0%, #17a2b8 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
-        cursor: pointer;
-    }
-    
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        color: white;
-    }
-    
-    .action-btn i {
-        margin-right: 8px;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: #6c757d;
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        color: #dee2e6;
-        margin-bottom: 20px;
-    }
-    
-    .badge-role {
-        display: inline-block;
-        padding: 8px 20px;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    
-    .badge-learner {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-    
-    .badge-instructor {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-    }
-    
-    .badge-admin {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        color: white;
-    }
-    
-    .quick-action-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-    }
-    
-    .quick-action-card {
-        background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        padding: 20px;
-        text-align: center;
-        text-decoration: none;
-        color: #495057;
-        transition: all 0.3s ease;
-    }
-    
-    .quick-action-card:hover {
-        border-color: #667eea;
-        color: #667eea;
-        transform: translateY(-3px);
-    }
-    
-    .quick-action-card i {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-        display: block;
-    }
-</style>
 
 <div class="container mt-4">
     <!-- Flash Messages -->
@@ -307,8 +160,8 @@ include '../app/includes/navbar.php';
                                             <span class="badge bg-warning">Pending</span>
                                         <?php elseif ($booking['status'] === 'accepted'): ?>
                                             <span class="badge bg-success">Confirmed</span>
-                                        <?php elseif ($booking['status'] === 'rejected'): ?>
-                                            <span class="badge bg-danger">Rejected</span>
+                                        <?php elseif ($booking['status'] === 'declined'): ?>
+                                            <span class="badge bg-danger">Declined</span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -419,7 +272,7 @@ include '../app/includes/navbar.php';
                                             <i class="fas fa-calendar"></i> <?php echo format_datetime($session['event_datetime']); ?>
                                         </small><br>
                                         <small class="text-muted">
-                                            <i class="fas fa-users"></i> <?php echo $session['capacity_remaining']; ?>/<?php echo $session['max_capacity']; ?> spots available
+                                            <i class="fas fa-users"></i> <?php echo $session['capacity_remaining']; ?>/<?php echo $session['total_capacity']; ?> spots available
                                         </small>
                                     </div>
                                     <div>
@@ -470,7 +323,7 @@ include '../app/includes/navbar.php';
                                             <i class="fas fa-book"></i> <?php echo escape($request['session_title']); ?>
                                         </small><br>
                                         <small class="text-muted">
-                                            <i class="fas fa-clock"></i> <?php echo time_ago($request['booked_at']); ?>
+                                            <i class="fas fa-clock"></i> <?php echo time_ago($request['requested_at']); ?>
                                         </small>
                                     </div>
                                     <div>
@@ -670,4 +523,4 @@ include '../app/includes/navbar.php';
     <?php endif; ?>
 </div>
 
-<?php include '../app/includes/footer.php'; ?>
+<?php require_once '../app/includes/footer.php'; ?>

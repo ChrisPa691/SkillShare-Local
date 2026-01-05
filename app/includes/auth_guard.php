@@ -4,6 +4,9 @@
  * Protects pages from unauthorized access
  */
 
+// Include cookie functions
+require_once __DIR__ . '/../config/config.php';
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -16,13 +19,24 @@ if (session_status() === PHP_SESSION_NONE) {
  * @return void
  */
 function require_login() {
+    // First check if session exists
     if (!isset($_SESSION['user_id'])) {
-        // Store the intended destination
-        $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
+        // Try to validate and restore from cookie
+        if (validateAuthCookie() && isset($_SESSION['user_id'])) {
+            // Cookie validation successful, session restored
+            return;
+        }
         
-        // Redirect to login
+        // No valid session or cookie - redirect to login
+        $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
         header('Location: /CourseProject/public/login.php');
         exit();
+    }
+    
+    // Session exists - validate cookie matches
+    if (!validateAuthCookie()) {
+        // Cookie invalid or missing - handle expired cookie
+        handleExpiredCookie(AUTH_COOKIE_NAME);
     }
 }
 

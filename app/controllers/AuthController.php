@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../config/config.php';
 
 class AuthController {
     
@@ -232,6 +233,9 @@ class AuthController {
         $_SESSION['role'] = $user['role'];
         $_SESSION['city'] = $user['city'] ?? null;
         $_SESSION['last_activity'] = time();
+        
+        // Create authentication cookie
+        createAuthCookie(session_id());
     }
     
     /**
@@ -244,6 +248,9 @@ class AuthController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        
+        // Delete authentication cookie
+        deleteAuthCookie();
         
         // Unset all session variables
         $_SESSION = [];

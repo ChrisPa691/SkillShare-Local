@@ -33,8 +33,8 @@ $categories = SessionController::getCategories();
 
 // Page title
 $page_title = "Create New Session";
-include __DIR__ . '/../app/includes/header.php';
-include __DIR__ . '/../app/includes/navbar.php';
+require_once __DIR__ . '/../app/includes/header.php';
+require_once __DIR__ . '/../app/includes/navbar.php';
 ?>
 
 <div class="container my-5">
@@ -225,71 +225,34 @@ include __DIR__ . '/../app/includes/navbar.php';
     </div>
 </div>
 
+<!-- Inline script to immediately initialize form state -->
 <script>
-// Dynamic form field visibility
-document.addEventListener('DOMContentLoaded', function() {
-    const feeTypeRadios = document.querySelectorAll('input[name="fee_type"]');
-    const feeAmountContainer = document.getElementById('fee_amount_container');
+    // Initialize fee_amount field state immediately
     const feeAmountInput = document.getElementById('fee_amount');
+    if (feeAmountInput) {
+        feeAmountInput.required = false;
+        feeAmountInput.disabled = true; // Disable to prevent validation
+    }
     
-    const locationTypeRadios = document.querySelectorAll('input[name="location_type"]');
-    const onlineLinkContainer = document.getElementById('online_link_container');
-    const onlineLinkInput = document.getElementById('online_link');
-    const inpersonContainer = document.getElementById('inperson_location_container');
+    // Initialize location fields state immediately
     const cityInput = document.getElementById('city');
     const addressInput = document.getElementById('address');
+    const onlineLinkInput = document.getElementById('online_link');
     
-    // Fee type toggle
-    function toggleFeeAmount() {
-        const isPaid = document.querySelector('input[name="fee_type"]:checked').value === 'paid';
-        feeAmountContainer.style.display = isPaid ? 'block' : 'none';
-        feeAmountInput.required = isPaid;
-        if (!isPaid) {
-            feeAmountInput.value = '0';
-        }
+    if (cityInput) {
+        cityInput.required = false;
+        cityInput.disabled = true; // Disable to prevent validation
     }
-    
-    // Location type toggle
-    function toggleLocation() {
-        const isOnline = document.querySelector('input[name="location_type"]:checked').value === 'online';
-        onlineLinkContainer.style.display = isOnline ? 'block' : 'none';
-        inpersonContainer.style.display = isOnline ? 'none' : 'block';
-        
-        onlineLinkInput.required = isOnline;
-        cityInput.required = !isOnline;
-        addressInput.required = !isOnline;
-        
-        // Clear unused fields
-        if (isOnline) {
-            cityInput.value = '';
-            addressInput.value = '';
-        } else {
-            onlineLinkInput.value = '';
-        }
+    if (addressInput) {
+        addressInput.required = false;
+        addressInput.disabled = true; // Disable to prevent validation
     }
-    
-    // Event listeners
-    feeTypeRadios.forEach(radio => radio.addEventListener('change', toggleFeeAmount));
-    locationTypeRadios.forEach(radio => radio.addEventListener('change', toggleLocation));
-    
-    // Initial state
-    toggleFeeAmount();
-    toggleLocation();
-    
-    // Form validation
-    const form = document.getElementById('createSessionForm');
-    form.addEventListener('submit', function(e) {
-        const eventDateTime = document.getElementById('event_datetime').value;
-        const now = new Date();
-        const selectedDate = new Date(eventDateTime);
-        
-        if (selectedDate <= now) {
-            e.preventDefault();
-            alert('Event date must be in the future');
-            return false;
-        }
-    });
-});
+    if (onlineLinkInput) {
+        onlineLinkInput.required = true;
+        onlineLinkInput.disabled = false;
+    }
 </script>
 
-<?php include __DIR__ . '/../app/includes/footer.php'; ?>
+<script src="assets/js/sessions.js"></script>
+
+<?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

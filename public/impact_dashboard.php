@@ -15,113 +15,6 @@ include '../app/includes/header.php';
 include '../app/includes/navbar.php';
 ?>
 
-<style>
-    .impact-hero {
-        background: linear-gradient(135deg, #28a745 0%, #17a2b8 100%);
-        color: white;
-        padding: 60px 0;
-        margin-bottom: 50px;
-        border-radius: 15px;
-        text-align: center;
-    }
-    
-    .impact-hero h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 20px;
-    }
-    
-    .impact-hero p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-    }
-    
-    .impact-stat-card {
-        background: white;
-        border-radius: 15px;
-        padding: 40px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
-        transition: transform 0.3s ease;
-    }
-    
-    .impact-stat-card:hover {
-        transform: translateY(-10px);
-    }
-    
-    .impact-stat-card i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #28a745 0%, #17a2b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .impact-number {
-        font-size: 3.5rem;
-        font-weight: 700;
-        color: #28a745;
-        margin: 10px 0;
-    }
-    
-    .impact-label {
-        font-size: 1.2rem;
-        color: #6c757d;
-        font-weight: 600;
-    }
-    
-    .methodology-card {
-        background: #f8f9fa;
-        border-left: 5px solid #28a745;
-        padding: 30px;
-        border-radius: 10px;
-        margin: 30px 0;
-    }
-    
-    .methodology-card h4 {
-        color: #28a745;
-        font-weight: 700;
-        margin-bottom: 15px;
-    }
-    
-    .category-impact {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .category-name {
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .category-co2 {
-        font-weight: 700;
-        color: #28a745;
-        font-size: 1.2rem;
-    }
-    
-    .transparency-notice {
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(23, 162, 184, 0.1) 100%);
-        border: 2px solid #28a745;
-        border-radius: 15px;
-        padding: 30px;
-        margin: 40px 0;
-    }
-    
-    .transparency-notice h4 {
-        color: #28a745;
-        font-weight: 700;
-        margin-bottom: 15px;
-    }
-</style>
-
 <div class="container mt-4">
     <!-- Hero Section -->
     <div class="impact-hero">
@@ -290,4 +183,4 @@ include '../app/includes/navbar.php';
     </div>
 </div>
 
-<?php include '../app/includes/footer.php'; ?>
+<?php require_once '../app/includes/footer.php'; ?>

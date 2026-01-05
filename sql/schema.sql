@@ -91,13 +91,44 @@ CREATE TABLE IF NOT EXISTS ratings (
     INDEX idx_learner (learner_id)
 );
 
-/* Impact factors for sustainability per category */
+/* ============================================================ */
+/* APPLICATION SETTINGS SYSTEM */
+/* ============================================================ */
+
+/* App Settings: Application-level configuration */
+CREATE TABLE IF NOT EXISTS app_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) NOT NULL UNIQUE COMMENT 'Dot notation key (e.g., security.session_timeout_minutes)',
+    setting_value TEXT NOT NULL COMMENT 'Stored as text, cast based on value_type',
+    value_type ENUM('string', 'int', 'float', 'bool', 'json') NOT NULL DEFAULT 'string' COMMENT 'Data type for casting',
+    group_name VARCHAR(50) NOT NULL COMMENT 'Logical grouping (security, booking, ui, etc.)',
+    description TEXT NOT NULL COMMENT 'Human-readable description of the setting',
+    is_public BOOLEAN DEFAULT FALSE COMMENT 'Can this setting be exposed to frontend?',
+    is_editable BOOLEAN DEFAULT TRUE COMMENT 'Can admins edit this via UI?',
+    updated_by INT DEFAULT NULL COMMENT 'User ID who last updated this setting',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_group_name (group_name),
+    INDEX idx_setting_key (setting_key),
+    FOREIGN KEY (updated_by) REFERENCES Users(user_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* Impact Factors: Sustainability impact data for different skill categories */
 CREATE TABLE IF NOT EXISTS impact_factors (
-    impact_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_id INT UNIQUE NOT NULL,
-    co2_saved_per_participant_kg DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (co2_saved_per_participant_kg >= 0),
-    FOREIGN KEY (category_id) REFERENCES Categories(category_id) ON DELETE CASCADE
-);
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    skill_category VARCHAR(100) NOT NULL UNIQUE COMMENT 'Skill category name (e.g., Cooking, Programming)',
+    co2_saved_per_participant_kg DECIMAL(8,2) NOT NULL DEFAULT 0.00 COMMENT 'Estimated CO2 saved per participant in kg',
+    source_note TEXT DEFAULT NULL COMMENT 'Citation or methodology note',
+    is_active BOOLEAN DEFAULT TRUE COMMENT 'Is this factor currently being used?',
+    updated_by INT DEFAULT NULL COMMENT 'User ID who last updated this factor',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_skill_category (skill_category),
+    INDEX idx_is_active (is_active),
+    FOREIGN KEY (updated_by) REFERENCES Users(user_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* Admin Actions Log */
 CREATE TABLE IF NOT EXISTS admin_actions (

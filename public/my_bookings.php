@@ -28,64 +28,9 @@ if ($filter === 'all') {
 
 $page_title = "My Bookings";
 
-include '../app/includes/header.php';
-include '../app/includes/navbar.php';
+require_once '../app/includes/header.php';
+require_once '../app/includes/navbar.php';
 ?>
-
-<style>
-    .bookings-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 40px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    
-    .booking-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .booking-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-    
-    .filter-tabs {
-        margin-bottom: 30px;
-    }
-    
-    .filter-tabs .btn {
-        margin: 5px;
-        border-radius: 25px;
-        padding: 10px 25px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    
-    .filter-tabs .btn.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 80px 20px;
-        color: #6c757d;
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.3;
-    }
-</style>
 
 <div class="container mt-5 pt-5">
     <!-- Header -->
@@ -107,8 +52,8 @@ include '../app/includes/navbar.php';
         <a href="my_bookings.php?filter=accepted" class="btn btn-outline-success <?php echo $filter === 'accepted' ? 'active' : ''; ?>">
             <i class="fas fa-check"></i> Confirmed
         </a>
-        <a href="my_bookings.php?filter=rejected" class="btn btn-outline-danger <?php echo $filter === 'rejected' ? 'active' : ''; ?>">
-            <i class="fas fa-times"></i> Rejected
+        <a href="my_bookings.php?filter=declined" class="btn btn-outline-danger <?php echo $filter === 'declined' ? 'active' : ''; ?>">
+            <i class="fas fa-times"></i> Declined
         </a>
     </div>
 
@@ -134,9 +79,9 @@ include '../app/includes/navbar.php';
                                     <span class="badge bg-success" style="font-size: 1rem; padding: 8px 15px;">
                                         <i class="fas fa-check"></i> Confirmed
                                     </span>
-                                <?php elseif ($booking['status'] === 'rejected'): ?>
-                                    <span class="badge bg-danger" style="font-size: 1rem; padding: 8px 15px;">
-                                        <i class="fas fa-times"></i> Rejected
+                                <?php elseif ($booking['status'] === 'declined'): ?>
+                                    <span class="badge bg-danger text-white" style="font-size: 1rem; padding: 8px 15px;">
+                                        <i class="fas fa-times"></i> Declined
                                     </span>
                                 <?php elseif ($booking['status'] === 'cancelled'): ?>
                                     <span class="badge bg-secondary" style="font-size: 1rem; padding: 8px 15px;">
@@ -166,7 +111,7 @@ include '../app/includes/navbar.php';
                             </p>
                             <p style="margin: 5px 0;">
                                 <i class="fas fa-clock text-primary"></i>
-                                <strong>Booked:</strong> <?php echo time_ago($booking['booked_at']); ?>
+                                <strong>Booked:</strong> <?php echo time_ago($booking['requested_at']); ?>
                             </p>
                         </div>
                         
@@ -186,17 +131,21 @@ include '../app/includes/navbar.php';
                                 </form>
                             <?php endif; ?>
                             
-                            <?php if ($booking['status'] === 'accepted' && $booking['session_status'] === 'completed'): ?>
+                            <?php if ($booking['status'] === 'accepted'): ?>
+                                <?php 
+                                $session_ended = strtotime($booking['event_datetime']) < time();
+                                ?>
                                 <a href="rate_session.php?session_id=<?php echo $booking['session_id']; ?>" 
-                                   class="btn btn-warning">
+                                   class="btn btn-warning <?php echo !$session_ended ? 'disabled' : ''; ?>"
+                                   <?php echo !$session_ended ? 'aria-disabled="true" onclick="return false;" title="Available after session ends"' : ''; ?>>
                                     <i class="fas fa-star"></i> Rate Session
                                 </a>
                             <?php endif; ?>
                         </div>
                         
-                        <?php if ($booking['rejection_reason'] && $booking['status'] === 'rejected'): ?>
+                        <?php if (!empty($booking['rejection_reason']) && $booking['status'] === 'declined'): ?>
                             <div class="alert alert-danger mt-3" style="margin-bottom: 0;">
-                                <strong>Rejection Reason:</strong> <?php echo escape($booking['rejection_reason']); ?>
+                                <strong>Decline Reason:</strong> <?php echo escape($booking['rejection_reason']); ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -224,4 +173,4 @@ include '../app/includes/navbar.php';
     </div>
 </div>
 
-<?php include '../app/includes/footer.php'; ?>
+<?php require_once '../app/includes/footer.php'; ?>

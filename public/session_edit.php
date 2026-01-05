@@ -54,8 +54,8 @@ $categories = SessionController::getCategories();
 
 // Page title
 $page_title = "Edit Session";
-include __DIR__ . '/../app/includes/header.php';
-include __DIR__ . '/../app/includes/navbar.php';
+require_once __DIR__ . '/../app/includes/header.php';
+require_once __DIR__ . '/../app/includes/navbar.php';
 ?>
 
 <div class="container my-5">
@@ -251,60 +251,6 @@ include __DIR__ . '/../app/includes/navbar.php';
     </div>
 </div>
 
-<script>
-// Dynamic form field visibility (same as create form)
-document.addEventListener('DOMContentLoaded', function() {
-    const feeTypeRadios = document.querySelectorAll('input[name="fee_type"]');
-    const feeAmountContainer = document.getElementById('fee_amount_container');
-    const feeAmountInput = document.getElementById('fee_amount');
-    
-    const locationTypeRadios = document.querySelectorAll('input[name="location_type"]');
-    const onlineLinkContainer = document.getElementById('online_link_container');
-    const onlineLinkInput = document.getElementById('online_link');
-    const inpersonContainer = document.getElementById('inperson_location_container');
-    const cityInput = document.getElementById('city');
-    const addressInput = document.getElementById('address');
-    
-    function toggleFeeAmount() {
-        const isPaid = document.querySelector('input[name="fee_type"]:checked').value === 'paid';
-        feeAmountContainer.style.display = isPaid ? 'block' : 'none';
-        feeAmountInput.required = isPaid;
-        if (!isPaid) {
-            feeAmountInput.value = '0';
-        }
-    }
-    
-    function toggleLocation() {
-        const isOnline = document.querySelector('input[name="location_type"]:checked').value === 'online';
-        onlineLinkContainer.style.display = isOnline ? 'block' : 'none';
-        inpersonContainer.style.display = isOnline ? 'none' : 'block';
-        
-        onlineLinkInput.required = isOnline;
-        cityInput.required = !isOnline;
-        addressInput.required = !isOnline;
-    }
-    
-    feeTypeRadios.forEach(radio => radio.addEventListener('change', toggleFeeAmount));
-    locationTypeRadios.forEach(radio => radio.addEventListener('change', toggleLocation));
-    
-    // Initial state
-    toggleFeeAmount();
-    toggleLocation();
-    
-    // Form validation
-    const form = document.getElementById('editSessionForm');
-    form.addEventListener('submit', function(e) {
-        const eventDateTime = document.getElementById('event_datetime').value;
-        const now = new Date();
-        const selectedDate = new Date(eventDateTime);
-        
-        if (selectedDate <= now) {
-            e.preventDefault();
-            alert('Event date must be in the future');
-            return false;
-        }
-    });
-});
-</script>
+<script src="assets/js/sessions.js"></script>
 
-<?php include __DIR__ . '/../app/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

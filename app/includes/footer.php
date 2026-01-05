@@ -5,196 +5,6 @@
      */
     ?>
     
-    <style>
-        /* Footer Styles */
-        .site-footer {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
-            color: white;
-            padding: 60px 0 20px;
-            margin-top: 80px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Decorative Elements */
-        .site-footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #28a745 0%, #17a2b8 50%, #28a745 100%);
-        }
-        
-        .footer-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .footer-section h5 {
-            color: #28a745;
-            font-weight: 700;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .footer-section h5 i {
-            font-size: 1.5rem;
-        }
-        
-        .footer-section p {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.8;
-            margin-bottom: 15px;
-        }
-        
-        .footer-links {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .footer-links li {
-            margin-bottom: 12px;
-        }
-        
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .footer-links a:hover {
-            color: #28a745;
-            padding-left: 10px;
-        }
-        
-        .footer-links a i {
-            color: #17a2b8;
-            font-size: 0.9rem;
-        }
-        
-        /* Impact Statement */
-        .impact-statement {
-            background: rgba(40, 167, 69, 0.1);
-            border-left: 4px solid #28a745;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-        
-        .impact-statement p {
-            margin: 0;
-            font-style: italic;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .impact-statement i {
-            color: #28a745;
-            font-size: 1.3rem;
-            margin-right: 10px;
-        }
-        
-        /* Social Icons */
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .social-links a {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .social-links a:hover {
-            background: linear-gradient(135deg, #28a745 0%, #17a2b8 100%);
-            border-color: white;
-            transform: translateY(-5px) rotate(360deg);
-        }
-        
-        /* Statistics */
-        .footer-stats {
-            display: flex;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #28a745;
-            display: block;
-        }
-        
-        .stat-label {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-        }
-        
-        /* Copyright */
-        .footer-bottom {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-        }
-        
-        .footer-bottom p {
-            color: rgba(255, 255, 255, 0.6);
-            margin: 0;
-            font-size: 0.9rem;
-        }
-        
-        .footer-bottom a {
-            color: #28a745;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .footer-bottom a:hover {
-            color: #17a2b8;
-            text-decoration: underline;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .site-footer {
-                padding: 40px 0 20px;
-                margin-top: 50px;
-            }
-            
-            .footer-section {
-                margin-bottom: 30px;
-            }
-            
-            .footer-stats {
-                justify-content: center;
-            }
-        }
-    </style>
-    
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
@@ -215,16 +25,16 @@
                             
                             <!-- Social Links -->
                             <div class="social-links">
-                                <a href="#" title="Facebook" aria-label="Facebook">
+                                <a href="https://www.facebook.com/" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-facebook-f"></i>
                                 </a>
-                                <a href="#" title="Twitter" aria-label="Twitter">
+                                <a href="https://x.com/" title="Twitter" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-twitter"></i>
                                 </a>
-                                <a href="#" title="Instagram" aria-label="Instagram">
+                                <a href="https://www.instagram.com/" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-instagram"></i>
                                 </a>
-                                <a href="#" title="LinkedIn" aria-label="LinkedIn">
+                                <a href="https://www.linkedin.com/" title="LinkedIn" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
                                     <i class="fab fa-linkedin-in"></i>
                                 </a>
                             </div>
@@ -367,88 +177,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JavaScript -->
-    <script>
-        $(document).ready(function() {
-            
-            // Shrinking header on scroll
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 50) {
-                    $('#mainHeader').addClass('shrink');
-                    $('#mainNavbar').addClass('shrink');
-                } else {
-                    $('#mainHeader').removeClass('shrink');
-                    $('#mainNavbar').removeClass('shrink');
-                }
-            });
-            
-            // Smooth scroll for anchor links
-            $('a[href^="#"]').on('click', function(event) {
-                var target = $(this.getAttribute('href'));
-                if(target.length) {
-                    event.preventDefault();
-                    $('html, body').stop().animate({
-                        scrollTop: target.offset().top - 150
-                    }, 800, 'easeInOutQuad');
-                }
-            });
-            
-            // Animate footer stats on scroll into view
-            var statsAnimated = false;
-            $(window).scroll(function() {
-                if (!statsAnimated) {
-                    var footerOffset = $('.footer-stats').offset();
-                    if (footerOffset && $(window).scrollTop() + $(window).height() > footerOffset.top) {
-                        $('.stat-number').each(function() {
-                            $(this).prop('Counter', 0).animate({
-                                Counter: $(this).text().replace(/[^0-9.]/g, '')
-                            }, {
-                                duration: 2000,
-                                easing: 'swing',
-                                step: function(now) {
-                                    var text = $(this).parent().find('.stat-number').text();
-                                    var suffix = text.match(/[^0-9.]+$/);
-                                    $(this).text(Math.ceil(now) + (suffix ? suffix[0] : ''));
-                                }
-                            });
-                        });
-                        statsAnimated = true;
-                    }
-                }
-            });
-            
-            // Highlight active navigation item
-            var currentPath = window.location.pathname.split('/').pop();
-            $('.navbar-nav .nav-link').each(function() {
-                var linkPath = $(this).attr('href');
-                if (linkPath === currentPath || (currentPath === '' && linkPath === 'index.php')) {
-                    $(this).addClass('active');
-                }
-            });
-            
-            // Add hover effect to social links with jQuery UI
-            $('.social-links a').hover(
-                function() {
-                    $(this).effect('bounce', { times: 1, distance: 5 }, 300);
-                }
-            );
-            
-            // Fade in footer sections on load
-            $('.footer-section').hide().fadeIn(1000);
-            
-            // Close mobile navbar on link click
-            $('.navbar-nav .nav-link').on('click', function() {
-                if ($(window).width() < 992) {
-                    $('.navbar-collapse').collapse('hide');
-                }
-            });
-            
-        });
-    </script>
-    
-    <!-- Custom Page Scripts -->
-    <?php if (isset($custom_scripts)): ?>
-        <?php echo $custom_scripts; ?>
-    <?php endif; ?>
+    <script src="<?php echo $base_url; ?>/public/assets/js/main.js"></script>
+    <script src="<?php echo $base_url; ?>/public/assets/js/footer.js"></script>
     
 </body>
 </html>

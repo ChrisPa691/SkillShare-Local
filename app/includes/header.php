@@ -5,10 +5,18 @@
  * Includes Bootstrap 5, jQuery, Font Awesome, and custom styles
  */
 
+// Include cookie functions
+require_once __DIR__ . '/../config/config.php';
+
 // Determine the base path for assets
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
 $base_url = $protocol . '://' . $host . '/CourseProject';
+
+// Get user preferences from cookies
+$user_preferences = getAllPreferences();
+$theme = $user_preferences['theme'];
+$language = $user_preferences['language'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,6 +28,22 @@ $base_url = $protocol . '://' . $host . '/CourseProject';
     <meta name="author" content="SkillShare Local">
     
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>SkillShare Local</title>
+    
+    <!-- Theme Initialization (Before CSS to prevent FOUC) -->
+    <script>
+        // Load and apply saved theme immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            let theme = savedTheme;
+            
+            if (theme === 'auto') {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                theme = prefersDark ? 'dark' : 'light';
+            }
+            
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="<?php echo $base_url; ?>/public/assets/images/ui/favicon.svg">
@@ -36,140 +60,13 @@ $base_url = $protocol . '://' . $host . '/CourseProject';
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/header.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/includes.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/pages.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/theme.css">
     
-    <style>
-        /* Custom Header Styles */
-        :root {
-            --primary-green: #28a745;
-            --primary-blue: #17a2b8;
-            --accent-teal: #20c997;
-            --dark-text: #2c3e50;
-            --light-bg: #f8f9fa;
-            --gradient-eco: linear-gradient(135deg, #28a745 0%, #17a2b8 100%);
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--dark-text);
-            background-color: var(--light-bg);
-            padding-top: 140px; /* Offset for fixed header + navbar */
-        }
-        
-        /* Sticky Header with Shrink Effect */
-        .site-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1030;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .site-header.shrink {
-            padding: 8px 0 !important;
-        }
-        
-        .site-header.shrink .logo-text {
-            font-size: 1.5rem !important;
-        }
-        
-        .site-header.shrink .tagline {
-            font-size: 0.75rem !important;
-        }
-        
-        /* Header Content */
-        .header-content {
-            padding: 15px 0;
-            transition: padding 0.3s ease;
-        }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo-icon {
-            font-size: 2.5rem;
-            background: var(--gradient-eco);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            transition: font-size 0.3s ease;
-        }
-        
-        .logo-text {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--dark-text);
-            margin: 0;
-            transition: font-size 0.3s ease;
-        }
-        
-        .logo-text .highlight {
-            background: var(--gradient-eco);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tagline {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: font-size 0.3s ease;
-        }
-        
-        .tagline i {
-            color: var(--primary-green);
-        }
-        
-        /* Eco Badge */
-        .eco-badge {
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(23, 162, 184, 0.1) 100%);
-            border: 2px solid var(--primary-green);
-            border-radius: 50px;
-            padding: 8px 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--primary-green);
-        }
-        
-        .eco-badge i {
-            font-size: 1.2rem;
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                padding-top: 120px;
-            }
-            
-            .logo-text {
-                font-size: 1.3rem;
-            }
-            
-            .logo-icon {
-                font-size: 2rem;
-            }
-            
-            .tagline {
-                font-size: 0.75rem;
-            }
-            
-            .eco-badge {
-                font-size: 0.7rem;
-                padding: 5px 12px;
-            }
-        }
-    </style>
+    <!-- Preferences Script (Currency & Theme) -->
+    <script src="<?php echo $base_url; ?>/public/assets/js/preferences.js"></script>
 </head>
 <body>
     
@@ -205,3 +102,31 @@ $base_url = $protocol . '://' . $host . '/CourseProject';
             </div>
         </div>
     </header>
+    
+    <!-- Cookie Consent Banner -->
+    <?php if (shouldShowConsentBanner()): ?>
+    <div id="cookieConsentBanner" class="cookie-consent-banner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="consent-content">
+                        <i class="fas fa-cookie-bite me-2"></i>
+                        <span>
+                            <strong>We use cookies</strong> to enhance your experience, analyze site traffic, and personalize content. 
+                            By clicking "Accept", you consent to our use of cookies.
+                            <a href="#" class="text-white text-decoration-underline">Learn more</a>
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-sm me-2" onclick="handleCookieConsent(false)">
+                        <i class="fas fa-times me-1"></i> Decline
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="handleCookieConsent(true)">
+                        <i class="fas fa-check me-1"></i> Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>

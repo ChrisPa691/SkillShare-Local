@@ -17,7 +17,7 @@ class User {
     public static function getUserById($user_id) {
         global $conn;
         
-        $sql = "SELECT user_id, full_name, email, role, city, is_suspended, suspended_reason, created_at
+        $sql = "SELECT user_id, full_name, email, role, city, is_suspended, suspended_reason, created_at, updated_at
                 FROM Users 
                 WHERE user_id = ?";
         
@@ -200,6 +200,113 @@ class User {
             return $result['count'] > 0;
         } catch (PDOException $e) {
             error_log("Error in emailExists: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Get user by ID (alias for getUserById)
+     * 
+     * @param int $id - User ID
+     * @return array|false - User data or false if not found
+     */
+    public static function getById($id) {
+        return self::getUserById($id);
+    }
+    
+    /**
+     * Update user profile information
+     * 
+     * @param int $userId - User ID
+     * @param array $data - Data to update (full_name, email, city)
+     * @return bool - Success status
+     */
+    public static function update($userId, $data) {
+        global $conn;
+        
+        $fields = [];
+        $params = [];
+        
+        if (isset($data['full_name'])) {
+            $fields[] = "full_name = ?";
+            $params[] = $data['full_name'];
+        }
+        
+        if (isset($data['email'])) {
+            // Check if email is already taken by another user
+            if (self::emailExists($data['email'], $userId)) {
+                return false;
+            }
+            $fields[] = "email = ?";
+            $params[] = $data['email'];
+        }
+        
+        if (isset($data['city'])) {
+            $fields[] = "city = ?";
+            $params[] = $data['city'];
+        }
+        
+        if (empty($fields)) {
+            return false;
+        }
+        
+        $params[] = $userId;
+        $sql = "UPDATE Users SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE user_id = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Error in User::update: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verify user's current password
+     * 
+     * @param int $userId - User ID
+     * @param string $password - Password to verify
+     * @return bool - True if password is correct
+     */
+    public static function verifyPassword($userId, $password) {
+        global $conn;
+        
+        $sql = "SELECT password_hash FROM Users WHERE user_id = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user && password_verify($password, $user['password_hash'])) {
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error in verifyPassword: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Update user password
+     * 
+     * @param int $userId - User ID
+     * @param string $newPassword - New password (plain text, will be hashed)
+     * @return bool - Success status
+     */
+    public static function updatePassword($userId, $newPassword) {
+        global $conn;
+        
+        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $sql = "UPDATE Users SET password_hash = ?, updated_at = NOW() WHERE user_id = ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            return $stmt->execute([$passwordHash, $userId]);
+        } catch (PDOException $e) {
+            error_log("Error in updatePassword: " . $e->getMessage());
             return false;
         }
     }

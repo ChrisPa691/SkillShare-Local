@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/models/User.php';
 require_once __DIR__ . '/../app/models/Rating.php';
 require_once __DIR__ . '/../app/models/Booking.php';
 require_once __DIR__ . '/../app/includes/helpers.php';
+require_once __DIR__ . '/../app/includes/auth_guard.php';
 
 // Get session ID from URL parameter
 $session_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -64,7 +65,7 @@ require_once __DIR__ . '/../app/includes/header.php';
 require_once __DIR__ . '/../app/includes/navbar.php';
 ?>
 
-<div class="container my-5">
+<div class="container my-5 session-view-page">
     
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -236,9 +237,9 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                             <button class="btn btn-success w-100" disabled>
                                 <i class="fas fa-check me-2"></i>Booking Confirmed
                             </button>
-                        <?php elseif ($user_booking['status'] === 'rejected'): ?>
+                        <?php elseif ($user_booking['status'] === 'declined'): ?>
                             <button class="btn btn-danger w-100" disabled>
-                                <i class="fas fa-times me-2"></i>Booking Rejected
+                                <i class="fas fa-times me-2"></i>Booking Declined
                             </button>
                         <?php endif; ?>
                     <?php elseif ($can_book): ?>
@@ -337,16 +338,7 @@ require_once __DIR__ . '/../app/includes/navbar.php';
     
 </div>
 
-<!-- Copy to clipboard functionality -->
-<script>
-function copyToClipboard() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-        alert('Link copied to clipboard!');
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-    });
-}
-</script>
+<!-- Session View Scripts -->
+<script src="assets/js/sessions.js"></script>
 
 <?php require_once __DIR__ . '/../app/includes/footer.php'; ?>

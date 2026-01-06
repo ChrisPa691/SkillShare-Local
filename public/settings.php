@@ -8,13 +8,31 @@
 require_once '../app/config/database.php';
 require_once '../app/includes/auth_guard.php';
 require_once '../app/models/User.php';
-require_once '../app/models/Settings.php';
+require_once '../app/models/UserSettings.php';
 
 // Require authentication
 require_login();
 
 $userId = $_SESSION['user_id'];
 $user = User::getById($userId);
+
+// Load user preferences from UserSettings
+$userSettings = UserSettings::get($userId);
+if (!$userSettings) {
+    UserSettings::create($userId);
+    $userSettings = UserSettings::get($userId);
+}
+
+$userTheme = $userSettings['theme'] ?? 'light';
+$emailNotifications = $userSettings['notify_email'] ?? true;
+$bookingReminders = $userSettings['notify_inapp'] ?? true;
+$marketingEmails = $userSettings['notify_push'] ?? false;
+$userLanguage = $userSettings['language'] ?? 'en';
+$userTimezone = $userSettings['timezone'] ?? 'UTC';
+$userCurrency = $userSettings['currency'] ?? 'GBP';
+$fontSize = $userSettings['font_size'] ?? 16;
+$lineHeight = $userSettings['line_height'] ?? 1.50;
+$contrastMode = $userSettings['contrast_mode'] ?? 'normal';
 
 // Handle form submissions
 $message = '';
@@ -27,21 +45,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updateData = [
             'full_name' => trim($_POST['full_name']),
             'email' => trim($_POST['email']),
-            'city' => trim($_POST['city'])
+            'city' => trim($_POST['city']),
+            'bio' => trim($_POST['bio'])
         ];
         
-        // Validate email format
-        if (!filter_var($updateData['email'], FILTER_VALIDATE_EMAIL)) {
-            $message = "Invalid email format.";
-            $messageType = 'error';
-        } else {
-            if (User::update($userId, $updateData)) {
-                $message = "Profile updated successfully.";
-                $messageType = 'success';
-                $user = User::getById($userId); // Refresh user data
-            } else {
-                $message = "Failed to update profile.";
+        // Handle profile photo upload
+        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            
+            $fileType = $_FILES['profile_photo']['type'];
+            $fileSize = $_FILES['profile_photo']['size'];
+            
+            if (!in_array($fileType, $allowedTypes)) {
+                $message = "Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.";
                 $messageType = 'error';
+            } elseif ($fileSize > $maxSize) {
+                $message = "File too large. Maximum size is 5MB.";
+                $messageType = 'error';
+            } else {
+                // Create uploads directory if it doesn't exist
+                $uploadDir = 'assets/uploads/avatars/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                // Generate unique filename
+                $extension = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
+                $filename = 'avatar_' . $userId . '_' . time() . '.' . $extension;
+                $uploadPath = $uploadDir . $filename;
+                
+                // Move uploaded file
+                if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $uploadPath)) {
+                    // Delete old avatar if exists (check both relative and absolute paths)
+                    if (!empty($user['avatar_path'])) {
+                        $oldAvatarPath = $user['avatar_path'];
+                        // Try deleting with both the stored path and checking if it's in the current directory
+                        if (file_exists($oldAvatarPath)) {
+                            @unlink($oldAvatarPath);
+                        } elseif (file_exists(__DIR__ . '/' . $oldAvatarPath)) {
+                            @unlink(__DIR__ . '/' . $oldAvatarPath);
+                        }
+                    }
+                    
+                    $updateData['avatar_path'] = $uploadPath;
+                } else {
+                    $message = "Failed to upload profile photo.";
+                    $messageType = 'error';
+                }
+            }
+        }
+        
+        // Validate email format
+        if (!isset($messageType) || $messageType !== 'error') {
+            if (!filter_var($updateData['email'], FILTER_VALIDATE_EMAIL)) {
+                $message = "Invalid email format.";
+                $messageType = 'error';
+            } else {
+                if (User::update($userId, $updateData)) {
+                    $message = "Profile updated successfully.";
+                    $messageType = 'success';
+                    $user = User::getById($userId); // Refresh user data
+                } else {
+                    $message = "Failed to update profile.";
+                    $messageType = 'error';
+                }
             }
         }
     }
@@ -75,22 +143,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Update Email Preferences
     if (isset($_POST['action']) && $_POST['action'] === 'update_preferences') {
-        $preferences = [
-            'email_notifications' => isset($_POST['email_notifications']) ? 1 : 0,
-            'booking_reminders' => isset($_POST['booking_reminders']) ? 1 : 0,
-            'marketing_emails' => isset($_POST['marketing_emails']) ? 1 : 0
-        ];
-        
-        // Store preferences (you can create a user_preferences table or store in user table)
-        // For now, we'll just show success
-        $message = "Preferences updated successfully.";
-        $messageType = 'success';
+        try {
+            $updateData = [
+                'notify_email' => isset($_POST['email_notifications']) ? 1 : 0,
+                'notify_inapp' => isset($_POST['booking_reminders']) ? 1 : 0,
+                'notify_push' => isset($_POST['marketing_emails']) ? 1 : 0,
+                'theme' => $_POST['theme_mode'] ?? 'light',
+                'language' => $_POST['language'] ?? 'en',
+                'timezone' => $_POST['timezone'] ?? 'UTC',
+                'currency' => $_POST['currency'] ?? 'GBP',
+                'font_size' => isset($_POST['font_size']) ? (int)$_POST['font_size'] : 16,
+                'contrast_mode' => $_POST['contrast_mode'] ?? 'normal'
+            ];
+            
+            UserSettings::update($userId, $updateData);
+            
+            // Reload preferences
+            $userSettings = UserSettings::get($userId);
+            $userTheme = $userSettings['theme'] ?? 'light';
+            $emailNotifications = $userSettings['notify_email'] ?? true;
+            $bookingReminders = $userSettings['notify_inapp'] ?? true;
+            $marketingEmails = $userSettings['notify_push'] ?? false;
+            $userLanguage = $userSettings['language'] ?? 'en';
+            $userTimezone = $userSettings['timezone'] ?? 'UTC';
+            $userCurrency = $userSettings['currency'] ?? 'GBP';
+            $fontSize = $userSettings['font_size'] ?? 16;
+            $lineHeight = $userSettings['line_height'] ?? 1.50;
+            $contrastMode = $userSettings['contrast_mode'] ?? 'normal';
+            
+            // Return JSON for AJAX requests
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Preferences updated successfully',
+                    'preferences' => $userSettings
+                ]);
+                exit;
+            }
+            
+            $message = "Preferences updated successfully.";
+            $messageType = 'success';
+        } catch (Exception $e) {
+            // Return JSON for AJAX requests
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to update preferences: ' . $e->getMessage()
+                ]);
+                exit;
+            }
+            
+            $message = "Failed to update preferences: " . $e->getMessage();
+            $messageType = 'error';
+        }
     }
 }
-
-// Get public app settings for display
-$publicSettings = Settings::getPublic();
-$appCurrency = Settings::get('booking.currency', 'GBP');
 
 $pageTitle = "Settings";
 include '../app/includes/header.php';
@@ -137,8 +246,35 @@ include '../app/includes/navbar.php';
                             <h4 class="mb-0"><i class="fas fa-user"></i> Profile Information</h4>
                         </div>
                         <div class="card-body">
-                            <form method="POST">
+                            <form method="POST" enctype="multipart/form-data">
                                 <input type="hidden" name="action" value="update_profile">
+                                
+                                <!-- Profile Photo -->
+                                <div class="mb-3">
+                                    <label class="form-label">Profile Photo</label>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <?php if (!empty($user['avatar_path'])): ?>
+                                            <img src="<?php echo htmlspecialchars($user['avatar_path']); ?>" 
+                                                 alt="Profile Photo" 
+                                                 class="rounded-circle me-3" 
+                                                 style="width: 80px; height: 80px; object-fit: cover;">
+                                        <?php else: ?>
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white me-3" 
+                                                 style="width: 80px; height: 80px; font-size: 2rem;">
+                                                <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div>
+                                            <input 
+                                                type="file" 
+                                                name="profile_photo" 
+                                                class="form-control" 
+                                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                            >
+                                            <small class="text-muted">JPG, PNG, GIF or WebP. Max 5MB.</small>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 <div class="mb-3">
                                     <label class="form-label">Full Name *</label>
@@ -172,6 +308,17 @@ include '../app/includes/navbar.php';
                                         value="<?php echo htmlspecialchars($user['city'] ?? ''); ?>"
                                         placeholder="e.g., London, Manchester"
                                     >
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Bio</label>
+                                    <textarea 
+                                        name="bio" 
+                                        class="form-control" 
+                                        rows="4"
+                                        maxlength="500"
+                                        placeholder="Tell us about yourself..."><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
+                                    <small class="text-muted">Maximum 500 characters. This will be visible on your profile.</small>
                                 </div>
 
                                 <div class="mb-3">
@@ -307,7 +454,7 @@ include '../app/includes/navbar.php';
                             <h4 class="mb-0"><i class="fas fa-sliders-h"></i> Email & Notification Preferences</h4>
                         </div>
                         <div class="card-body">
-                            <form method="POST">
+                            <form method="POST" id="preferencesForm">
                                 <input type="hidden" name="action" value="update_preferences">
                                 
                                 <div class="form-check form-switch mb-3">
@@ -316,7 +463,7 @@ include '../app/includes/navbar.php';
                                         type="checkbox" 
                                         name="email_notifications" 
                                         id="emailNotifications"
-                                        checked
+                                        <?php echo $emailNotifications ? 'checked' : ''; ?>
                                     >
                                     <label class="form-check-label" for="emailNotifications">
                                         <strong>Email Notifications</strong>
@@ -331,7 +478,7 @@ include '../app/includes/navbar.php';
                                         type="checkbox" 
                                         name="booking_reminders" 
                                         id="bookingReminders"
-                                        checked
+                                        <?php echo $bookingReminders ? 'checked' : ''; ?>
                                     >
                                     <label class="form-check-label" for="bookingReminders">
                                         <strong>Booking Reminders</strong>
@@ -346,6 +493,7 @@ include '../app/includes/navbar.php';
                                         type="checkbox" 
                                         name="marketing_emails" 
                                         id="marketingEmails"
+                                        <?php echo $marketingEmails ? 'checked' : ''; ?>
                                     >
                                     <label class="form-check-label" for="marketingEmails">
                                         <strong>Marketing Emails</strong>
@@ -359,15 +507,39 @@ include '../app/includes/navbar.php';
                                 <h5>Display Preferences</h5>
                                 
                                 <div class="mb-3">
+                                    <label class="form-label">Language</label>
+                                    <select class="form-select" name="language" id="language">
+                                        <option value="en" <?php echo $userLanguage === 'en' ? 'selected' : ''; ?>>English</option>
+                                        <option value="el" <?php echo $userLanguage === 'el' ? 'selected' : ''; ?>>Ελληνικά (Greek)</option>
+                                        <option value="es" <?php echo $userLanguage === 'es' ? 'selected' : ''; ?>>Español</option>
+                                        <option value="fr" <?php echo $userLanguage === 'fr' ? 'selected' : ''; ?>>Français</option>
+                                        <option value="de" <?php echo $userLanguage === 'de' ? 'selected' : ''; ?>>Deutsch</option>
+                                    </select>
+                                    <small class="text-muted">Choose your preferred language</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Timezone</label>
+                                    <select class="form-select" name="timezone" id="timezone">
+                                        <option value="Europe/London" <?php echo $userTimezone === 'Europe/London' ? 'selected' : ''; ?>>London (GMT)</option>
+                                        <option value="Europe/Athens" <?php echo $userTimezone === 'Europe/Athens' ? 'selected' : ''; ?>>Athens (EET)</option>
+                                        <option value="Asia/Nicosia" <?php echo $userTimezone === 'Asia/Nicosia' ? 'selected' : ''; ?>>Nicosia (EET)</option>
+                                        <option value="America/New_York" <?php echo $userTimezone === 'America/New_York' ? 'selected' : ''; ?>>New York (EST)</option>
+                                        <option value="America/Los_Angeles" <?php echo $userTimezone === 'America/Los_Angeles' ? 'selected' : ''; ?>>Los Angeles (PST)</option>
+                                    </select>
+                                    <small class="text-muted">Choose your timezone</small>
+                                </div>
+                                
+                                <div class="mb-3">
                                     <label class="form-label">Preferred Currency</label>
-                                    <select class="form-select" name="preferred_currency" id="preferredCurrency">
-                                        <option value="GBP" selected>British Pound (£)</option>
-                                        <option value="USD">US Dollar ($)</option>
-                                        <option value="EUR">Euro (€)</option>
-                                        <option value="CAD">Canadian Dollar (CA$)</option>
-                                        <option value="AUD">Australian Dollar (AU$)</option>
-                                        <option value="JPY">Japanese Yen (¥)</option>
-                                        <option value="INR">Indian Rupee (₹)</option>
+                                    <select class="form-select" name="currency" id="preferredCurrency">
+                                        <option value="GBP" <?php echo $userCurrency === 'GBP' ? 'selected' : ''; ?>>British Pound (£)</option>
+                                        <option value="USD" <?php echo $userCurrency === 'USD' ? 'selected' : ''; ?>>US Dollar ($)</option>
+                                        <option value="EUR" <?php echo $userCurrency === 'EUR' ? 'selected' : ''; ?>>Euro (€)</option>
+                                        <option value="CAD" <?php echo $userCurrency === 'CAD' ? 'selected' : ''; ?>>Canadian Dollar (CA$)</option>
+                                        <option value="AUD" <?php echo $userCurrency === 'AUD' ? 'selected' : ''; ?>>Australian Dollar (AU$)</option>
+                                        <option value="JPY" <?php echo $userCurrency === 'JPY' ? 'selected' : ''; ?>>Japanese Yen (¥)</option>
+                                        <option value="INR" <?php echo $userCurrency === 'INR' ? 'selected' : ''; ?>>Indian Rupee (₹)</option>
                                     </select>
                                     <small class="text-muted">Choose your preferred currency for displaying prices</small>
                                 </div>
@@ -375,41 +547,37 @@ include '../app/includes/navbar.php';
                                 <div class="mb-3">
                                     <label class="form-label">Theme</label>
                                     <select class="form-select" name="theme_mode" id="themeMode">
-                                        <option value="light">Light Mode</option>
-                                        <option value="dark">Dark Mode</option>
-                                        <option value="auto">Auto (System Preference)</option>
+                                        <option value="light" <?php echo $userTheme === 'light' ? 'selected' : ''; ?>>Light Mode</option>
+                                        <option value="dark" <?php echo $userTheme === 'dark' ? 'selected' : ''; ?>>Dark Mode</option>
+                                        <option value="auto" <?php echo $userTheme === 'auto' ? 'selected' : ''; ?>>Auto (System Preference)</option>
                                     </select>
                                     <small class="text-muted">Choose your preferred color theme</small>
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Items Per Page</label>
-                                    <select class="form-select" name="items_per_page">
-                                        <option value="12" selected>12 items</option>
-                                        <option value="24">24 items</option>
-                                        <option value="36">36 items</option>
-                                        <option value="48">48 items</option>
+                                    <label class="form-label">Font Size</label>
+                                    <select class="form-select" name="font_size">
+                                        <option value="12" <?php echo $fontSize == 12 ? 'selected' : ''; ?>>12px (Small)</option>
+                                        <option value="14" <?php echo $fontSize == 14 ? 'selected' : ''; ?>>14px</option>
+                                        <option value="16" <?php echo $fontSize == 16 ? 'selected' : ''; ?>>16px (Normal)</option>
+                                        <option value="18" <?php echo $fontSize == 18 ? 'selected' : ''; ?>>18px</option>
+                                        <option value="20" <?php echo $fontSize == 20 ? 'selected' : ''; ?>>20px (Large)</option>
+                                        <option value="24" <?php echo $fontSize == 24 ? 'selected' : ''; ?>>24px (Extra Large)</option>
                                     </select>
-                                    <small class="text-muted">Number of sessions to display per page in listings</small>
+                                    <small class="text-muted">Adjust text size for better readability</small>
                                 </div>
 
-                                <div class="form-check form-switch mb-3">
-                                    <input 
-                                        class="form-check-input" 
-                                        type="checkbox" 
-                                        name="show_impact_badges" 
-                                        id="showImpactBadges"
-                                        checked
-                                    >
-                                    <label class="form-check-label" for="showImpactBadges">
-                                        <strong>Show Sustainability Badges</strong>
-                                        <br>
-                                        <small class="text-muted">Display CO₂ impact badges on session cards</small>
-                                    </label>
+                                <div class="mb-3">
+                                    <label class="form-label">Contrast Mode</label>
+                                    <select class="form-select" name="contrast_mode">
+                                        <option value="normal" <?php echo $contrastMode === 'normal' ? 'selected' : ''; ?>>Normal</option>
+                                        <option value="high" <?php echo $contrastMode === 'high' ? 'selected' : ''; ?>>High Contrast</option>
+                                    </select>
+                                    <small class="text-muted">Enhance visibility with high contrast mode</small>
                                 </div>
 
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary" id="savePreferencesBtn">
                                         <i class="fas fa-save"></i> Save Preferences
                                     </button>
                                 </div>
@@ -436,29 +604,31 @@ include '../app/includes/navbar.php';
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-sm-4 fw-bold">Currency:</div>
-                                <div class="col-sm-8"><?php echo htmlspecialchars($appCurrency); ?></div>
+                                <div class="col-sm-4 fw-bold">Registration:</div>
+                                <div class="col-sm-8">Open</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4 fw-bold">Platform Fee:</div>
+                                <div class="col-sm-8">10%</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4 fw-bold">Max Session Duration:</div>
+                                <div class="col-sm-8">8 hours</div>
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-sm-4 fw-bold">Registration:</div>
+                                <div class="col-sm-4 fw-bold">Sustainability Tracking:</div>
                                 <div class="col-sm-8">
-                                    <?php echo Settings::get('user.allow_registration', true) ? 'Open' : 'Closed'; ?>
+                                    <span class="badge bg-success">Enabled</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        Display unit: kg CO₂e<br>
+                                        Avg commute distance: 10 km
+                                    </small>
                                 </div>
                             </div>
-
-                            <?php if (Settings::get('impact.enable_tracking', true)): ?>
-                                <div class="row mb-3">
-                                    <div class="col-sm-4 fw-bold">Sustainability Tracking:</div>
-                                    <div class="col-sm-8">
-                                        <span class="badge bg-success">Enabled</span>
-                                        <br>
-                                        <small class="text-muted">
-                                            Display unit: <?php echo htmlspecialchars(Settings::get('impact.display_unit', 'kg CO₂')); ?>
-                                        </small>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
 
                             <hr class="my-4">
 
@@ -506,6 +676,7 @@ include '../app/includes/navbar.php';
 
 <?php include '../app/includes/footer.php'; ?>
 
+<script src="assets/js/settings.js"></script>
 <script>
 // Password matching validation
 document.getElementById('confirmPassword').addEventListener('input', function() {
@@ -532,8 +703,7 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
 
 // Tab persistence
 const settingsNav = document.getElementById('settings-nav');
-if (settingsNav) {
-    const hash = window.location.hash;
+if (const hash = window.location.hash;
     if (hash) {
         const tab = document.querySelector(`a[href="${hash}"]`);
         if (tab) {
@@ -548,91 +718,7 @@ if (settingsNav) {
             history.pushState(null, null, e.target.getAttribute('href'));
         }
     });
-}
-
-// ==========================================
-// THEME MANAGEMENT
-// ==========================================
-
-// Load saved theme preference
-function loadThemePreference() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    const themeSelect = document.getElementById('themeMode');
-    
-    if (themeSelect) {
-        themeSelect.value = savedTheme;
-    }
-    
-    applyTheme(savedTheme);
-}
-
-// Apply theme to the page
-function applyTheme(theme) {
-    const body = document.body;
-    
-    if (theme === 'auto') {
-        // Use system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        theme = prefersDark ? 'dark' : 'light';
-    }
-    
-    // Remove both classes first
-    body.classList.remove('theme-light', 'theme-dark');
-    
-    // Add the appropriate theme class
-    body.classList.add(`theme-${theme}`);
-    
-    // Update data attribute for CSS targeting
-    body.setAttribute('data-theme', theme);
-    
-    // Store preference
-    localStorage.setItem('theme', document.getElementById('themeMode')?.value || theme);
-}
-
-// Handle theme change
-const themeSelect = document.getElementById('themeMode');
-if (themeSelect) {
-    themeSelect.addEventListener('change', function() {
-        applyTheme(this.value);
-    });
-}
-
-// Listen for system theme changes (for auto mode)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme === 'auto') {
-        applyTheme('auto');
-    }
-});
-
-// ==========================================
-// CURRENCY PREFERENCE
-// ==========================================
-
-// Load saved currency preference
-function loadCurrencyPreference() {
-    const savedCurrency = localStorage.getItem('preferredCurrency') || 'GBP';
-    const currencySelect = document.getElementById('preferredCurrency');
-    
-    if (currencySelect) {
-        currencySelect.value = savedCurrency;
-    }
-}
-
-// Handle currency change
-const currencySelect = document.getElementById('preferredCurrency');
-if (currencySelect) {
-    currencySelect.addEventListener('change', function() {
-        localStorage.setItem('preferredCurrency', this.value);
-        // Show success message
-        showToast('Currency preference saved! This will be used for displaying prices throughout the app.', 'success');
-    });
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadThemePreference();
-    loadCurrencyPreference();
+} // No need for duplicate initialization here
 });
 </script>
 
@@ -642,27 +728,27 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .list-group-item:hover {
-    background-color: #f8f9fa;
+    background-color: var(--bg-hover);
 }
 
 .list-group-item.active {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 .card {
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
 }
 
 .form-check-input:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 .tab-content {

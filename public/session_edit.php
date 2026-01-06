@@ -81,7 +81,7 @@ require_once __DIR__ . '/../app/includes/navbar.php';
             <!-- Edit Session Form -->
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <form method="POST" action="session_edit.php?id=<?= $session_id ?>" enctype="multipart/form-data" id="editSessionForm">
+                    <form method="POST" action="session_edit.php?id=<?= $session_id ?>" enctype="multipart/form-data" id="editSessionForm" class="needs-validation" novalidate>
                         
                         <!-- Basic Information -->
                         <h4 class="mb-3 text-primary"><i class="fas fa-info-circle"></i> Basic Information</h4>

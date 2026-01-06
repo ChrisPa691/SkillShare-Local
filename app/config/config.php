@@ -67,7 +67,7 @@ define('LOGS_PATH', BASE_PATH . '/logs');
 // ============================================================
 // APPLICATION URL (ENVIRONMENT-SPECIFIC)
 // ============================================================
-define('BASE_URL', 'http://localhost/CourseProject');
+define('BASE_URL', 'http://localhost/SkillShare-Local');
 define('PUBLIC_URL', BASE_URL . '/public');
 
 // ============================================================

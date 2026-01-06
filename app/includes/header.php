@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/config.php';
 // Determine the base path for assets
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
-$base_url = $protocol . '://' . $host . '/CourseProject';
+$base_url = $protocol . '://' . $host . '/SkillShare-Local';
 
 // Get user preferences from cookies
 $user_preferences = getAllPreferences();
@@ -41,7 +41,20 @@ $language = $user_preferences['language'];
                 theme = prefersDark ? 'dark' : 'light';
             }
             
+            // Apply to both html and body for maximum compatibility
             document.documentElement.setAttribute('data-theme', theme);
+            // Wait for body to be available
+            if (document.body) {
+                document.body.setAttribute('data-theme', theme);
+                document.body.classList.remove('theme-light', 'theme-dark');
+                document.body.classList.add('theme-' + theme);
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.setAttribute('data-theme', theme);
+                    document.body.classList.remove('theme-light', 'theme-dark');
+                    document.body.classList.add('theme-' + theme);
+                });
+            }
         })();
     </script>
     
@@ -59,11 +72,12 @@ $language = $user_preferences['language'];
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/theme.css">
     <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/style.css">
     <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/header.css">
     <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/includes.css">
     <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/pages.css">
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/theme.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>/public/assets/css/ui-enhancements.css">
     
     <!-- Preferences Script (Currency & Theme) -->
     <script src="<?php echo $base_url; ?>/public/assets/js/preferences.js"></script>

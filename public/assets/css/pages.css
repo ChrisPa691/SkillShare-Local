@@ -17,11 +17,11 @@
 }
 
 .dashboard-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: 15px;
     padding: 25px;
     margin-bottom: 25px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .dashboard-card h3 {
-    color: #667eea;
+    color: var(--color-primary);
     font-weight: 700;
     margin-bottom: 20px;
     display: flex;
@@ -45,7 +45,7 @@
 
 .stat-box {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--color-primary);
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 15px;
@@ -54,12 +54,12 @@
 .stat-number {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #667eea;
+    color: var(--color-primary);
     margin: 0;
 }
 
 .stat-label {
-    color: #6c757d;
+    color: var(--text-secondary);
     font-size: 1rem;
     margin: 0;
 }
@@ -90,13 +90,43 @@
 .empty-state {
     text-align: center;
     padding: 40px;
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .empty-state i {
     font-size: 4rem;
-    color: #dee2e6;
+    color: var(--border-color);
     margin-bottom: 20px;
+}
+
+/* Booking and Session Items */
+.booking-item,
+.session-to-rate,
+.session-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.booking-item h5,
+.session-to-rate h5,
+.session-item h5 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.booking-item a,
+.session-to-rate a,
+.session-item a {
+    text-decoration: none;
+    color: var(--color-primary);
+}
+
+.booking-item a:hover,
+.session-to-rate a:hover,
+.session-item a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
 }
 
 .badge-role {
@@ -130,19 +160,19 @@
 }
 
 .quick-action-card {
-    background: white;
-    border: 2px solid #e9ecef;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
     border-radius: 10px;
     padding: 20px;
     text-align: center;
     text-decoration: none;
-    color: #495057;
+    color: var(--text-primary);
     transition: all 0.3s ease;
 }
 
 .quick-action-card:hover {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
     transform: translateY(-3px);
 }
 
@@ -166,17 +196,33 @@
 }
 
 .booking-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: 15px;
     padding: 25px;
     margin-bottom: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .booking-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.booking-title {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 1.25rem;
+}
+
+.booking-title a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.booking-title a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
 }
 
 .filter-tabs {
@@ -195,6 +241,12 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
+}
+
+/* Status Badges */
+.badge-status {
+    font-size: 1rem;
+    padding: 8px 15px;
 }
 
 /* ====================================
@@ -222,11 +274,11 @@
 }
 
 .impact-stat-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: 15px;
     padding: 40px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-lg);
     margin-bottom: 30px;
     transition: transform 0.3s ease;
 }
@@ -257,25 +309,25 @@
 }
 
 .methodology-card {
-    background: #f8f9fa;
-    border-left: 5px solid #28a745;
+    background: var(--bg-secondary);
+    border-left: 5px solid var(--color-success);
     padding: 30px;
     border-radius: 10px;
     margin: 30px 0;
 }
 
 .methodology-card h4 {
-    color: #28a745;
+    color: var(--color-success);
     font-weight: 700;
     margin-bottom: 15px;
 }
 
 .category-impact {
-    background: white;
+    background: var(--bg-card);
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 15px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -283,12 +335,12 @@
 
 .category-name {
     font-weight: 600;
-    color: #495057;
+    color: var(--text-primary);
 }
 
 .category-co2 {
     font-weight: 700;
-    color: #28a745;
+    color: var(--color-success);
     font-size: 1.2rem;
 }
 
@@ -301,7 +353,7 @@
 }
 
 .transparency-notice h4 {
-    color: #28a745;
+    color: var(--color-success);
     font-weight: 700;
     margin-bottom: 15px;
 }
@@ -314,7 +366,7 @@
 .impact-page .empty-state {
     text-align: center;
     padding: 80px 20px;
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .bookings-page .empty-state i,
@@ -322,4 +374,67 @@
     font-size: 4rem;
     margin-bottom: 20px;
     opacity: 0.3;
+}
+
+/* ==========================================
+   DARK MODE OVERRIDES
+   ========================================== */
+
+body[data-theme="dark"] .dashboard-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    border: 1px solid var(--border-color);
+}
+
+body[data-theme="dark"] .stat-box {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--color-primary);
+}
+
+body[data-theme="dark"] .bookings-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    border: 1px solid var(--border-color);
+}
+
+body[data-theme="dark"] .impact-hero {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.3) 0%, rgba(23, 162, 184, 0.3) 100%);
+    border: 1px solid var(--border-color);
+}
+
+body[data-theme="dark"] .impact-stat-card i {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-info) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body[data-theme="dark"] .dashboard-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+body[data-theme="dark"] .action-btn {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.8) 0%, rgba(23, 162, 184, 0.8) 100%);
+}
+
+body[data-theme="dark"] .action-btn:hover {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-info) 100%);
+}
+
+body[data-theme="dark"] .filter-tabs .btn.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(118, 75, 162, 0.6) 100%);
+}
+
+body[data-theme="dark"] .badge-learner {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+}
+
+body[data-theme="dark"] .badge-instructor {
+    background: linear-gradient(135deg, rgba(240, 147, 251, 0.8) 0%, rgba(245, 87, 108, 0.8) 100%);
+}
+
+body[data-theme="dark"] .badge-admin {
+    background: linear-gradient(135deg, rgba(250, 112, 154, 0.8) 0%, rgba(254, 225, 64, 0.8) 100%);
+}
+
+body[data-theme="dark"] .transparency-notice {
+    background: var(--bg-secondary);
+    border: 2px solid var(--color-success);
 }

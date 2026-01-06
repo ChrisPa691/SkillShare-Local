@@ -75,6 +75,7 @@ class Booking {
         $sql = "SELECT b.*, 
                        s.title as session_title,
                        s.event_datetime,
+                       s.duration_minutes,
                        s.location_type,
                        s.city,
                        s.address,
@@ -262,6 +263,70 @@ class Booking {
                 'pending_bookings' => 0,
                 'accepted_bookings' => 0,
                 'declined_bookings' => 0
+            ];
+        }
+    }
+    
+    /**
+     * Get bookings per month statistics
+     * 
+     * @param int $limit - Number of months to fetch (default: 12)
+     * @return array - Monthly booking statistics
+     */
+    public static function getBookingsPerMonth($limit = 12) {
+        global $conn;
+        
+        $sql = "SELECT 
+                    DATE_FORMAT(requested_at, '%Y-%m') as month,
+                    DATE_FORMAT(requested_at, '%M %Y') as month_label,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                    SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined,
+                    SUM(CASE WHEN status = 'canceled' THEN 1 ELSE 0 END) as canceled
+                FROM bookings
+                WHERE requested_at >= DATE_SUB(NOW(), INTERVAL ? MONTH)
+                GROUP BY DATE_FORMAT(requested_at, '%Y-%m')
+                ORDER BY month DESC";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$limit]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getBookingsPerMonth: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get overall booking statistics
+     * 
+     * @return array - Overall booking statistics
+     */
+    public static function getOverallStats() {
+        global $conn;
+        
+        $sql = "SELECT 
+                    COUNT(*) as total_bookings,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                    SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined,
+                    SUM(CASE WHEN status = 'canceled' THEN 1 ELSE 0 END) as canceled
+                FROM bookings";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getOverallStats: " . $e->getMessage());
+            return [
+                'total_bookings' => 0,
+                'pending' => 0,
+                'accepted' => 0,
+                'declined' => 0,
+                'canceled' => 0
             ];
         }
     }

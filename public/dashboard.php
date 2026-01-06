@@ -27,19 +27,42 @@ if ($role === 'learner') {
     // Get learner's bookings
     $my_bookings = Booking::getBookingsByLearner($user_id);
     
-    // Get sessions to rate (accepted bookings for completed sessions without ratings)
+    // Calculate statistics
+    $total_bookings = 0;
+    $completed_sessions = 0;
+    $total_learning_hours = 0;
+    $upcoming_sessions = [];
     $sessions_to_rate = [];
+    
     if ($my_bookings) {
         foreach ($my_bookings as $booking) {
-            if ($booking['status'] === 'accepted' && $booking['session_status'] === 'completed') {
-                // Check if rating exists
-                $existing_rating = Rating::getRatingByLearnerAndSession($user_id, $booking['session_id']);
-                if (!$existing_rating) {
-                    $sessions_to_rate[] = $booking;
+            if ($booking['status'] === 'accepted') {
+                $total_bookings++;
+                
+                // Check if session has ended
+                $session_end_time = strtotime($booking['event_datetime']) + ($booking['duration_minutes'] * 60);
+                $current_time = time();
+                $has_ended = $session_end_time < $current_time;
+                
+                if ($has_ended) {
+                    $completed_sessions++;
+                    $total_learning_hours += $booking['duration_minutes'];
+                    
+                    // Check if needs rating
+                    $existing_rating = Rating::getRatingByLearnerAndSession($user_id, $booking['session_id']);
+                    if (!$existing_rating) {
+                        $sessions_to_rate[] = $booking;
+                    }
+                } else {
+                    // Session is upcoming
+                    $upcoming_sessions[] = $booking;
                 }
             }
         }
     }
+    
+    // Convert minutes to hours for display
+    $learning_hours = round($total_learning_hours / 60, 1);
 } elseif ($role === 'instructor') {
     // Get instructor's sessions
     $my_sessions = Session::getSessionsByInstructor($user_id);
@@ -59,6 +82,11 @@ if ($role === 'learner') {
             }
         }
     }
+} elseif ($role === 'admin') {
+    // Get platform statistics
+    $popular_categories = Session::getPopularCategories(5);
+    $completion_stats = Session::getCompletionRate();
+    $rating_stats = Rating::getPlatformRatingStats();
 }
 
 // Set page title based on role
@@ -106,15 +134,15 @@ require_once '../app/includes/navbar.php';
                 <div class="dashboard-card">
                     <h3><i class="fas fa-chart-line"></i> Your Progress</h3>
                     <div class="stat-box">
-                        <p class="stat-number">0</p>
+                        <p class="stat-number"><?php echo $total_bookings; ?></p>
                         <p class="stat-label">Sessions Booked</p>
                     </div>
                     <div class="stat-box">
-                        <p class="stat-number">0</p>
+                        <p class="stat-number"><?php echo $completed_sessions; ?></p>
                         <p class="stat-label">Sessions Completed</p>
                     </div>
                     <div class="stat-box">
-                        <p class="stat-number">0 hrs</p>
+                        <p class="stat-number"><?php echo $learning_hours; ?> hrs</p>
                         <p class="stat-label">Learning Time</p>
                     </div>
                 </div>
@@ -124,13 +152,43 @@ require_once '../app/includes/navbar.php';
             <div class="col-md-8 mb-4">
                 <div class="dashboard-card">
                     <h3><i class="fas fa-calendar-check"></i> Upcoming Booked Sessions</h3>
-                    <div class="empty-state">
-                        <i class="fas fa-calendar-times"></i>
-                        <p>You haven't booked any sessions yet.</p>
-                        <a href="sessions.php" class="action-btn">
-                            <i class="fas fa-search"></i> Browse Sessions
-                        </a>
-                    </div>
+                    <?php if ($upcoming_sessions && count($upcoming_sessions) > 0): ?>
+                        <?php foreach (array_slice($upcoming_sessions, 0, 3) as $session): ?>
+                            <div class="booking-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5>
+                                            <a href="session_view.php?id=<?php echo $session['session_id']; ?>">
+                                                <?php echo escape($session['session_title']); ?>
+                                            </a>
+                                        </h5>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> <?php echo format_datetime($session['event_datetime']); ?>
+                                        </small><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> <?php echo escape($session['instructor_name']); ?>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary">Upcoming</span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (count($upcoming_sessions) > 3): ?>
+                            <div class="text-center mt-3">
+                                <a href="my_bookings.php?filter=accepted" class="btn btn-sm btn-outline-primary">View All (<?php echo count($upcoming_sessions); ?>)</a>
+                            </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <p>You haven't booked any upcoming sessions yet.</p>
+                            <a href="sessions.php" class="action-btn">
+                                <i class="fas fa-search"></i> Browse Sessions
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -140,11 +198,11 @@ require_once '../app/includes/navbar.php';
                     <h3><i class="fas fa-bookmark"></i> My Bookings</h3>
                     <?php if ($my_bookings && count($my_bookings) > 0): ?>
                         <?php foreach (array_slice($my_bookings, 0, 3) as $booking): ?>
-                            <div class="booking-item" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                            <div class="booking-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h5 style="margin: 0; font-size: 1rem;">
-                                            <a href="session_view.php?id=<?php echo $booking['session_id']; ?>" style="text-decoration: none; color: #667eea;">
+                                        <h5>
+                                            <a href="session_view.php?id=<?php echo $booking['session_id']; ?>">
                                                 <?php echo escape($booking['session_title']); ?>
                                             </a>
                                         </h5>
@@ -186,8 +244,8 @@ require_once '../app/includes/navbar.php';
                     <h3><i class="fas fa-star"></i> Rate Completed Sessions</h3>
                     <?php if ($sessions_to_rate && count($sessions_to_rate) > 0): ?>
                         <?php foreach (array_slice($sessions_to_rate, 0, 3) as $session): ?>
-                            <div class="session-to-rate" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
-                                <h5 style="margin: 0; font-size: 1rem;"><?php echo escape($session['session_title']); ?></h5>
+                            <div class="session-to-rate">
+                                <h5><?php echo escape($session['session_title']); ?></h5>
                                 <small class="text-muted">
                                     <i class="fas fa-user"></i> <?php echo escape($session['instructor_name']); ?>
                                 </small><br>
@@ -260,11 +318,11 @@ require_once '../app/includes/navbar.php';
                     <h3><i class="fas fa-chalkboard-teacher"></i> My Sessions</h3>
                     <?php if ($my_sessions && count($my_sessions) > 0): ?>
                         <?php foreach (array_slice($my_sessions, 0, 3) as $session): ?>
-                            <div class="session-item" style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                            <div class="session-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h5 style="margin: 0; font-size: 1rem;">
-                                            <a href="session_view.php?id=<?php echo $session['session_id']; ?>" style="text-decoration: none; color: #667eea;">
+                                        <h5>
+                                            <a href="session_view.php?id=<?php echo $session['session_id']; ?>">
                                                 <?php echo escape($session['title']); ?>
                                             </a>
                                         </h5>
@@ -476,6 +534,84 @@ require_once '../app/includes/navbar.php';
                             <?php echo db_count('skill_sessions', ['session_status' => 'cancelled']); ?>
                         </p>
                         <p class="stat-label">Cancelled Sessions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Popular Categories -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-fire"></i> Popular Categories</h3>
+                    <?php if (!empty($popular_categories)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th class="text-center">Total</th>
+                                        <th class="text-center">Upcoming</th>
+                                        <th class="text-center">Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($popular_categories as $cat): ?>
+                                    <tr>
+                                        <td><strong><?php echo escape($cat['category_name']); ?></strong></td>
+                                        <td class="text-center"><?php echo $cat['session_count']; ?></td>
+                                        <td class="text-center text-primary"><?php echo $cat['upcoming_count']; ?></td>
+                                        <td class="text-center text-success"><?php echo $cat['completed_count']; ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-3">No session data available</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Session Completion & Ratings -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-chart-line"></i> Performance Metrics</h3>
+                    
+                    <!-- Completion Rate -->
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Session Completion Rate</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: <?php echo $completion_stats['completion_rate']; ?>%"
+                                         aria-valuenow="<?php echo $completion_stats['completion_rate']; ?>" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        <?php echo $completion_stats['completion_rate']; ?>%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <span class="badge bg-success"><?php echo $completion_stats['completed_sessions']; ?> / <?php echo $completion_stats['total_sessions']; ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Average Rating -->
+                    <div>
+                        <h5 class="text-muted mb-2">Average Platform Rating</h5>
+                        <div class="d-flex align-items-center">
+                            <h2 class="text-warning mb-0 me-3">
+                                <i class="fas fa-star"></i> <?php echo $rating_stats['average_rating']; ?>
+                            </h2>
+                            <div class="flex-grow-1">
+                                <small class="text-muted d-block">Based on <?php echo $rating_stats['total_ratings']; ?> ratings</small>
+                                <div class="rating-breakdown small">
+                                    <span class="me-2">⭐⭐⭐⭐⭐: <?php echo $rating_stats['five_stars']; ?></span>
+                                    <span class="me-2">⭐⭐⭐⭐: <?php echo $rating_stats['four_stars']; ?></span>
+                                    <span>⭐⭐⭐: <?php echo $rating_stats['three_stars']; ?></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

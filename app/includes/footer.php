@@ -179,6 +179,7 @@
     <!-- Custom JavaScript -->
     <script src="<?php echo $base_url; ?>/public/assets/js/main.js"></script>
     <script src="<?php echo $base_url; ?>/public/assets/js/footer.js"></script>
+    <script src="<?php echo $base_url; ?>/public/assets/js/ui-enhancements.js"></script>
     
 </body>
 </html>

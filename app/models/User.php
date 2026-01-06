@@ -17,7 +17,7 @@ class User {
     public static function getUserById($user_id) {
         global $conn;
         
-        $sql = "SELECT user_id, full_name, email, role, city, is_suspended, suspended_reason, created_at, updated_at
+        $sql = "SELECT user_id, full_name, email, role, city, bio, avatar_path, is_suspended, suspended_reason, created_at, updated_at
                 FROM Users 
                 WHERE user_id = ?";
         
@@ -244,6 +244,16 @@ class User {
         if (isset($data['city'])) {
             $fields[] = "city = ?";
             $params[] = $data['city'];
+        }
+        
+        if (isset($data['bio'])) {
+            $fields[] = "bio = ?";
+            $params[] = $data['bio'];
+        }
+        
+        if (isset($data['avatar_path'])) {
+            $fields[] = "avatar_path = ?";
+            $params[] = $data['avatar_path'];
         }
         
         if (empty($fields)) {

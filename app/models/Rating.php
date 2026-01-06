@@ -178,4 +178,50 @@ class Rating {
             return false;
         }
     }
+    
+    /**
+     * Get platform-wide average rating statistics
+     * 
+     * @return array - Rating statistics
+     */
+    public static function getPlatformRatingStats() {
+        global $conn;
+        
+        $sql = "SELECT 
+                    COALESCE(AVG(rating), 0) as average_rating,
+                    COUNT(*) as total_ratings,
+                    SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_stars,
+                    SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_stars,
+                    SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_stars,
+                    SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_stars,
+                    SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star
+                FROM ratings";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return [
+                'average_rating' => round((float)$stats['average_rating'], 2),
+                'total_ratings' => (int)$stats['total_ratings'],
+                'five_stars' => (int)$stats['five_stars'],
+                'four_stars' => (int)$stats['four_stars'],
+                'three_stars' => (int)$stats['three_stars'],
+                'two_stars' => (int)$stats['two_stars'],
+                'one_star' => (int)$stats['one_star']
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getPlatformRatingStats: " . $e->getMessage());
+            return [
+                'average_rating' => 0,
+                'total_ratings' => 0,
+                'five_stars' => 0,
+                'four_stars' => 0,
+                'three_stars' => 0,
+                'two_stars' => 0,
+                'one_star' => 0
+            ];
+        }
+    }
 }

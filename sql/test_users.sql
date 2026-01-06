@@ -24,17 +24,17 @@ INSERT INTO Users (full_name, email, password_hash, role, city, is_suspended, su
 -- Learner Test User
 -- Email: learner@test.com
 -- Password: Learner123
-('Test Learner', 'learner@test.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'learner', 'Toronto', FALSE, NULL),
+('Test Learner', 'learner@test.com', '$2y$10$rH9mPF5qWkjFQr1CMzGAbu1L7WGbA2G0o3NE3qYiEyeWjYChQJsvu', 'learner', 'Toronto', FALSE, NULL),
 
 -- Instructor Test User  
 -- Email: instructor@test.com
 -- Password: Instructor123
-('Test Instructor', 'instructor@test.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'instructor', 'Vancouver', FALSE, NULL),
+('Test Instructor', 'instructor@test.com', '$2y$10$RNWGMHheflfxUTfL5vIXQ.U/.hvZBkwUGOjUu.pxLvqhXDL59bfCm', 'instructor', 'Vancouver', FALSE, NULL),
 
 -- Admin Test User
 -- Email: admin@test.com  
 -- Password: Admin123
-('Test Admin', 'admin@test.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Montreal', FALSE, NULL);
+('Test Admin', 'admin@test.com', '$2y$10$L3.vNTgl1R4fzoUrFQR3o.J.AA7yQzOIkBX3ZIwDMl.1WZRK7JJ5e', 'admin', 'Montreal', FALSE, NULL);
 
 -- ============================================
 -- CATEGORIES

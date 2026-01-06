@@ -46,6 +46,8 @@ class Settings {
                 description, 
                 is_public, 
                 is_editable,
+                validation_rules,
+                default_value,
                 updated_by,
                 updated_at
             FROM app_settings
@@ -62,6 +64,8 @@ class Settings {
                 'description' => $row['description'],
                 'is_public' => (bool)$row['is_public'],
                 'is_editable' => (bool)$row['is_editable'],
+                'validation_rules' => $row['validation_rules'] ? json_decode($row['validation_rules'], true) : null,
+                'default_value' => $row['default_value'],
                 'updated_by' => $row['updated_by'],
                 'updated_at' => $row['updated_at']
             ];
@@ -237,6 +241,11 @@ class Settings {
             return false; // Cannot edit non-editable settings
         }
         
+        // Validate the value
+        if (!self::validate($key, $value)) {
+            return false;
+        }
+        
         // Convert value to string for storage
         $type = $settings[$key]['type'];
         if ($type === 'json') {
@@ -367,10 +376,10 @@ class Settings {
         $stmt = $conn->prepare("
             INSERT INTO app_settings (
                 setting_key, setting_value, value_type, group_name, description,
-                is_public, is_editable, updated_by
+                is_public, is_editable, validation_rules, default_value, updated_by
             ) VALUES (
                 :key, :value, :type, :group, :description,
-                :is_public, :is_editable, :updated_by
+                :is_public, :is_editable, :validation_rules, :default_value, :updated_by
             )
         ");
         
@@ -382,6 +391,8 @@ class Settings {
             ':description' => $data['description'],
             ':is_public' => $data['is_public'] ?? 0,
             ':is_editable' => $data['is_editable'] ?? 1,
+            ':validation_rules' => isset($data['validation_rules']) ? json_encode($data['validation_rules']) : null,
+            ':default_value' => $data['default_value'] ?? $data['setting_value'],
             ':updated_by' => $data['updated_by'] ?? null
         ]);
         
@@ -390,6 +401,172 @@ class Settings {
         }
         
         return $success;
+    }
+
+    /**
+     * Validate a setting value against its validation rules
+     * 
+     * @param string $key Setting key
+     * @param mixed $value Value to validate
+     * @return bool True if valid or no rules, false otherwise
+     */
+    public static function validate($key, $value) {
+        $settings = self::getAll();
+        
+        if (!isset($settings[$key])) {
+            return false;
+        }
+        
+        $rules = $settings[$key]['validation_rules'];
+        
+        // No validation rules = always valid
+        if (!$rules || !is_array($rules)) {
+            return true;
+        }
+        
+        $type = $settings[$key]['type'];
+        
+        // Min/Max validation for numbers
+        if (in_array($type, ['int', 'float'])) {
+            if (isset($rules['min']) && $value < $rules['min']) {
+                return false;
+            }
+            if (isset($rules['max']) && $value > $rules['max']) {
+                return false;
+            }
+        }
+        
+        // Min/Max length for strings
+        if ($type === 'string') {
+            if (isset($rules['min_length']) && strlen($value) < $rules['min_length']) {
+                return false;
+            }
+            if (isset($rules['max_length']) && strlen($value) > $rules['max_length']) {
+                return false;
+            }
+            
+            // Regex validation
+            if (isset($rules['regex']) && !preg_match($rules['regex'], $value)) {
+                return false;
+            }
+        }
+        
+        // Enum validation (allowed values)
+        if (isset($rules['enum']) && is_array($rules['enum'])) {
+            if (!in_array($value, $rules['enum'])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Reset a setting to its default value
+     * 
+     * @param string $key Setting key
+     * @param int|null $userId ID of user making the change
+     * @return bool Success status
+     */
+    public static function reset($key, $userId = null) {
+        $conn = self::getConnection();
+        
+        // Get the default value
+        $settings = self::getAll();
+        if (!isset($settings[$key])) {
+            return false;
+        }
+        
+        $defaultValue = $settings[$key]['default_value'];
+        if ($defaultValue === null) {
+            return false; // No default value defined
+        }
+        
+        // Update to default value
+        $stmt = $conn->prepare("
+            UPDATE app_settings 
+            SET setting_value = :value,
+                updated_by = :user_id,
+                updated_at = NOW()
+            WHERE setting_key = :key
+        ");
+        
+        $success = $stmt->execute([
+            ':value' => $defaultValue,
+            ':user_id' => $userId,
+            ':key' => $key
+        ]);
+        
+        if ($success) {
+            self::clearCache();
+        }
+        
+        return $success;
+    }
+
+    /**
+     * Reset all settings in a group to their default values
+     * 
+     * @param string $group Group name
+     * @param int|null $userId ID of user making the change
+     * @return array ['success' => int, 'failed' => int]
+     */
+    public static function resetGroup($group, $userId = null) {
+        $settings = self::getGroup($group);
+        $success = 0;
+        $failed = 0;
+        
+        foreach (array_keys($settings) as $key) {
+            if (self::reset($key, $userId)) {
+                $success++;
+            } else {
+                $failed++;
+            }
+        }
+        
+        return [
+            'success' => $success,
+            'failed' => $failed
+        ];
+    }
+
+    /**
+     * Get the default value for a setting
+     * 
+     * @param string $key Setting key
+     * @return mixed|null Default value or null if not defined
+     */
+    public static function getDefault($key) {
+        $settings = self::getAll();
+        
+        if (!isset($settings[$key])) {
+            return null;
+        }
+        
+        $defaultValue = $settings[$key]['default_value'];
+        $type = $settings[$key]['type'];
+        
+        if ($defaultValue === null) {
+            return null;
+        }
+        
+        return self::castValue($defaultValue, $type);
+    }
+
+    /**
+     * Get validation rules for a setting
+     * 
+     * @param string $key Setting key
+     * @return array|null Validation rules or null
+     */
+    public static function getValidationRules($key) {
+        $settings = self::getAll();
+        
+        if (!isset($settings[$key])) {
+            return null;
+        }
+        
+        return $settings[$key]['validation_rules'];
     }
 
     /**

@@ -64,7 +64,7 @@ function get_flash() {
 }
 
 /**
- * Display flash message as Bootstrap alert
+ * Display flash message as enhanced Bootstrap alert with icons
  * 
  * @return void
  */
@@ -78,11 +78,74 @@ function display_flash() {
             'info' => 'alert-info'
         ][$flash['type']] ?? 'alert-info';
         
-        echo '<div class="alert ' . $alert_class . ' alert-dismissible fade show" role="alert">';
+        $icons = [
+            'success' => '<i class="fas fa-check-circle me-2"></i>',
+            'error' => '<i class="fas fa-exclamation-circle me-2"></i>',
+            'warning' => '<i class="fas fa-exclamation-triangle me-2"></i>',
+            'info' => '<i class="fas fa-info-circle me-2"></i>'
+        ][$flash['type']] ?? '<i class="fas fa-info-circle me-2"></i>';
+        
+        echo '<div class="alert ' . $alert_class . ' alert-dismissible fade show alert-enhanced" role="alert">';
+        echo $icons;
+        echo '<strong>' . ucfirst($flash['type']) . ':</strong> ';
         echo escape($flash['message']);
         echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
         echo '</div>';
     }
+}
+
+/**
+ * Generate breadcrumb navigation
+ * 
+ * @param array $breadcrumbs - Array of ['label' => 'Label', 'url' => 'url.php'] or just 'Label' for current page
+ * @return void
+ */
+function display_breadcrumbs($breadcrumbs = []) {
+    if (empty($breadcrumbs)) {
+        return;
+    }
+    
+    echo '<nav aria-label="breadcrumb" class="breadcrumb-nav">';
+    echo '<ol class="breadcrumb">';
+    
+    // Always start with Home
+    $current_page = basename($_SERVER['PHP_SELF']);
+    $is_home = ($current_page === 'index.php' || $current_page === 'dashboard.php');
+    
+    if (!$is_home) {
+        $home_url = isset($_SESSION['user_id']) ? 'dashboard.php' : 'index.php';
+        $home_label = isset($_SESSION['user_id']) ? 'Dashboard' : 'Home';
+        echo '<li class="breadcrumb-item"><a href="' . $home_url . '"><i class="fas fa-home"></i> ' . $home_label . '</a></li>';
+    }
+    
+    foreach ($breadcrumbs as $key => $breadcrumb) {
+        $is_last = ($key === array_key_last($breadcrumbs));
+        
+        if (is_array($breadcrumb)) {
+            $label = $breadcrumb['label'] ?? '';
+            $url = $breadcrumb['url'] ?? '';
+            $icon = $breadcrumb['icon'] ?? '';
+            
+            if ($is_last) {
+                echo '<li class="breadcrumb-item active" aria-current="page">';
+                if ($icon) echo '<i class="' . $icon . ' me-1"></i>';
+                echo escape($label);
+                echo '</li>';
+            } else {
+                echo '<li class="breadcrumb-item">';
+                echo '<a href="' . escape($url) . '">';
+                if ($icon) echo '<i class="' . $icon . ' me-1"></i>';
+                echo escape($label);
+                echo '</a></li>';
+            }
+        } else {
+            // Simple string label (current page)
+            echo '<li class="breadcrumb-item active" aria-current="page">' . escape($breadcrumb) . '</li>';
+        }
+    }
+    
+    echo '</ol>';
+    echo '</nav>';
 }
 
 /**
@@ -328,7 +391,7 @@ function csrf_field() {
  * @return string
  */
 function base_url() {
-    return '/CourseProject/public';
+    return '/SkillShare-Local/public';
 }
 
 /**

@@ -1,0 +1,633 @@
+/**
+ * UI/UX Enhancement Styles
+ * Loading spinners, confirmation dialogs, tooltips, and improved feedback
+ */
+
+/* ==========================================
+   LOADING SPINNER OVERLAY
+   ========================================== */
+
+.loading-spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.loading-spinner-content {
+    background: var(--bg-card);
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    animation: scaleIn 0.3s ease-in-out;
+}
+
+.loading-spinner-content p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Dark theme support */
+.theme-dark .loading-spinner-content {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.theme-dark .loading-spinner-content p {
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   CONFIRMATION DIALOG
+   ========================================== */
+
+.custom-confirm-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.custom-confirm-dialog.show {
+    opacity: 1;
+}
+
+.custom-confirm-dialog.hiding {
+    opacity: 0;
+}
+
+.confirm-dialog-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.confirm-dialog-content {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease-in-out;
+}
+
+.custom-confirm-dialog.show .confirm-dialog-content {
+    transform: scale(1);
+}
+
+.confirm-dialog-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.confirm-dialog-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.confirm-dialog-body {
+    padding: 1.5rem;
+}
+
+.confirm-dialog-body p {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.confirm-dialog-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Dark theme support */
+.theme-dark .confirm-dialog-content {
+    background: var(--bg-card);
+}
+
+.theme-dark .confirm-dialog-header {
+    background: var(--bg-secondary);
+    border-bottom-color: var(--border-color);
+}
+
+.theme-dark .confirm-dialog-header h5 {
+    color: var(--text-primary);
+}
+
+.theme-dark .confirm-dialog-body p {
+    color: var(--text-primary);
+}
+
+.theme-dark .confirm-dialog-footer {
+    border-top-color: var(--border-color);
+}
+
+/* ==========================================
+   ENHANCED FORM VALIDATION
+   ========================================== */
+
+/* Valid field styling */
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: #28a745;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Invalid field styling */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.invalid-feedback {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+    animation: slideDown 0.2s ease-in-out;
+}
+
+.valid-feedback {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #28a745;
+}
+
+/* ==========================================
+   INLINE SPINNERS
+   ========================================== */
+
+.inline-spinner {
+    display: inline-block;
+    animation: spin 0.75s linear infinite;
+}
+
+/* ==========================================
+   ENHANCED TOOLTIPS
+   ========================================== */
+
+.tooltip {
+    font-size: 0.875rem;
+}
+
+.tooltip-inner {
+    max-width: 300px;
+    padding: 0.5rem 0.75rem;
+    background-color: #212529;
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: #212529;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: #212529;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: #212529;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: #212529;
+}
+
+/* ==========================================
+   IMPROVED BUTTONS
+   ========================================== */
+
+/* Button loading state */
+.btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.btn .spinner-border {
+    vertical-align: middle;
+}
+
+/* Hover effects */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ==========================================
+   IMPROVED FORM CONTROLS
+   ========================================== */
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Required field indicator */
+.form-label .text-danger {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================== */
+
+@media (max-width: 768px) {
+    .confirm-dialog-content {
+        width: 95%;
+    }
+    
+    .loading-spinner-content {
+        padding: 1.5rem 2rem;
+    }
+    
+    .confirm-dialog-footer {
+        flex-direction: column;
+    }
+    
+    .confirm-dialog-footer .btn {
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ========================================== */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #0d6efd;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 10000;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ==========================================
+   BREADCRUMB NAVIGATION
+   ========================================== */
+
+.breadcrumb-nav {
+    margin-bottom: 1.5rem;
+    background: transparent;
+}
+
+.breadcrumb {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.breadcrumb-item {
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '›';
+    color: #6c757d;
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
+}
+
+.breadcrumb-item a {
+    color: #0d6efd;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.breadcrumb-item a:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Dark theme */
+.theme-dark .breadcrumb {
+    background-color: #2d3748;
+    color: #e2e8f0;
+}
+
+.theme-dark .breadcrumb-item a {
+    color: #60a5fa;
+}
+
+.theme-dark .breadcrumb-item a:hover {
+    color: #93c5fd;
+}
+
+.theme-dark .breadcrumb-item.active {
+    color: #cbd5e0;
+}
+
+.theme-dark .breadcrumb-item + .breadcrumb-item::before {
+    color: #cbd5e0;
+}
+
+/* ==========================================
+   ENHANCED FLASH MESSAGES
+   ========================================== */
+
+.alert-enhanced {
+    border-left: 4px solid;
+    animation: slideInFromTop 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alert-enhanced.alert-success {
+    border-left-color: #28a745;
+}
+
+.alert-enhanced.alert-danger {
+    border-left-color: #dc3545;
+}
+
+.alert-enhanced.alert-warning {
+    border-left-color: #ffc107;
+}
+
+.alert-enhanced.alert-info {
+    border-left-color: #17a2b8;
+}
+
+.alert-enhanced i {
+    font-size: 1.1rem;
+    vertical-align: middle;
+}
+
+.alert-enhanced strong {
+    text-transform: capitalize;
+}
+
+@keyframes slideInFromTop {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ==========================================
+   MOBILE OFF-CANVAS MENU ENHANCEMENTS
+   ========================================== */
+
+.offcanvas-start {
+    width: 280px !important;
+}
+
+.offcanvas-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 1rem;
+}
+
+.offcanvas-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.offcanvas-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.offcanvas-header .btn-close:hover {
+    opacity: 1;
+}
+
+.offcanvas-body {
+    padding: 1rem;
+}
+
+.mobile-user-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mobile-user-info h6 {
+    font-weight: 600;
+    color: #212529;
+}
+
+.mobile-user-info .text-muted {
+    font-size: 0.875rem;
+}
+
+.mobile-nav-menu .nav-link {
+    padding: 0.75rem 1rem;
+    color: #495057;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-nav-menu .nav-link i {
+    width: 24px;
+    margin-right: 0.75rem;
+    text-align: center;
+}
+
+.mobile-nav-menu .nav-link:hover,
+.mobile-nav-menu .nav-link.active {
+    background-color: #e7f3ff;
+    color: #0d6efd;
+}
+
+.mobile-nav-menu .nav-link.text-primary:hover {
+    background-color: #e7f3ff;
+}
+
+.mobile-nav-menu .nav-link.text-success:hover {
+    background-color: #d4edda;
+}
+
+.mobile-nav-menu .nav-link.text-danger:hover {
+    background-color: #f8d7da;
+}
+
+.mobile-nav-menu small.text-muted {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Dark theme for offcanvas */
+.theme-dark .offcanvas {
+    background-color: #1a202c;
+    color: #e2e8f0;
+}
+
+.theme-dark .mobile-user-info {
+    background: #2d3748;
+}
+
+.theme-dark .mobile-user-info h6 {
+    color: #f7fafc;
+}
+
+.theme-dark .mobile-nav-menu .nav-link {
+    color: #e2e8f0;
+}
+
+.theme-dark .mobile-nav-menu .nav-link:hover,
+.theme-dark .mobile-nav-menu .nav-link.active {
+    background-color: #2d3748;
+    color: #60a5fa;
+}
+
+/* ==========================================
+   RESPONSIVE IMPROVEMENTS
+   ========================================== */
+
+/* Hide desktop navbar collapse on mobile */
+@media (max-width: 991.98px) {
+    #navbarContent {
+        display: none !important;
+    }
+}
+
+/* Breadcrumb responsive */
+@media (max-width: 576px) {
+    .breadcrumb {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        padding: 0 0.35rem;
+    }
+}

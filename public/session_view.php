@@ -67,16 +67,12 @@ require_once __DIR__ . '/../app/includes/navbar.php';
 
 <div class="container my-5 session-view-page">
     
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-            <li class="breadcrumb-item"><a href="sessions.php">Sessions</a></li>
-            <li class="breadcrumb-item active" aria-current="page">
-                <?= escape($session['title']) ?>
-            </li>
-        </ol>
-    </nav>
+    <?php 
+    display_breadcrumbs([
+        ['label' => 'Sessions', 'url' => 'sessions.php'],
+        escape($session['title'])
+    ]);
+    ?>
 
     <div class="row">
         
@@ -216,14 +212,24 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                     
                     <!-- Capacity -->
                     <h3 class="h5 mb-3">Availability</h3>
-                    <p><?= $session['capacity_remaining'] ?> / <?= $session['total_capacity'] ?> seats available</p>
-                    <?php 
-                    $capacity_percentage = $session['total_capacity'] > 0 ? (($session['total_capacity'] - $session['capacity_remaining']) / $session['total_capacity']) * 100 : 0;
-                    ?>
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: <?= $capacity_percentage ?>%" 
-                             aria-valuenow="<?= $capacity_percentage ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
+                    <?php if ($session['capacity_remaining'] <= 0): ?>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>SOLD OUT</strong> - This session is fully booked
+                        </div>
+                    <?php else: ?>
+                        <p><?= $session['capacity_remaining'] ?> / <?= $session['total_capacity'] ?> seats available</p>
+                        <?php 
+                        $capacity_percentage = $session['total_capacity'] > 0 ? (($session['total_capacity'] - $session['capacity_remaining']) / $session['total_capacity']) * 100 : 0;
+                        ?>
+                        <div class="progress">
+                            <div class="progress-bar <?= $capacity_percentage > 80 ? 'bg-warning' : 'bg-success' ?>" role="progressbar" style="width: <?= $capacity_percentage ?>%" 
+                                 aria-valuenow="<?= $capacity_percentage ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <?php if ($session['capacity_remaining'] <= 3): ?>
+                            <small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Only <?= $session['capacity_remaining'] ?> seat<?= $session['capacity_remaining'] !== 1 ? 's' : '' ?> left!</small>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     
                     <hr>
                     
@@ -243,11 +249,18 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                             </button>
                         <?php endif; ?>
                     <?php elseif ($can_book): ?>
-                        <form method="POST" action="book_session.php">
-                            <input type="hidden" name="session_id" value="<?= $session_id ?>">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-calendar-plus me-2"></i>Book This Session
+                        <?php if ($session['capacity_remaining'] <= 0): ?>
+                            <button class="btn btn-danger w-100" disabled>
+                                <i class="fas fa-times-circle me-2"></i>Session Full
                             </button>
+                        <?php else: ?>
+                            <form method="POST" action="book_session.php">
+                                <input type="hidden" name="session_id" value="<?= $session_id ?>">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-calendar-plus me-2"></i>Book This Session
+                                </button>
+                            </form>
+                        <?php endif; ?>
                         </form>
                     <?php elseif ($is_full): ?>
                         <button class="btn btn-secondary w-100" disabled>

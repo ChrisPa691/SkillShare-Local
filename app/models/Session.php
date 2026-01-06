@@ -30,9 +30,9 @@ class Session {
         
         $params = [];
         
-        // Apply filters
+        // Apply filters (case-insensitive search)
         if (!empty($filters['search'])) {
-            $sql .= " AND (s.title LIKE ? OR s.description LIKE ?)";
+            $sql .= " AND (LOWER(s.title) LIKE LOWER(?) OR LOWER(s.description) LIKE LOWER(?))";
             $searchTerm = '%' . $filters['search'] . '%';
             $params[] = $searchTerm;
             $params[] = $searchTerm;
@@ -56,6 +56,22 @@ class Session {
         if (!empty($filters['city'])) {
             $sql .= " AND s.city = ?";
             $params[] = $filters['city'];
+        }
+        
+        // Date range filters
+        if (!empty($filters['date_from'])) {
+            $sql .= " AND DATE(s.event_datetime) >= ?";
+            $params[] = $filters['date_from'];
+        }
+        
+        if (!empty($filters['date_to'])) {
+            $sql .= " AND DATE(s.event_datetime) <= ?";
+            $params[] = $filters['date_to'];
+        }
+        
+        // Availability filter
+        if (!empty($filters['has_availability'])) {
+            $sql .= " AND s.capacity_remaining > 0";
         }
         
         // Default to upcoming sessions if status not specified
@@ -478,6 +494,81 @@ class Session {
                 'completed_sessions' => 0,
                 'total_learners' => 0,
                 'average_rating' => 0
+            ];
+        }
+    }
+    
+    /**
+     * Get popular categories (sessions per category)
+     * 
+     * @param int $limit - Number of top categories to return
+     * @return array - Categories with session counts
+     */
+    public static function getPopularCategories($limit = 5) {
+        global $conn;
+        
+        $sql = "SELECT 
+                    c.category_id,
+                    c.name as category_name,
+                    COUNT(s.session_id) as session_count,
+                    SUM(CASE WHEN s.status = 'upcoming' THEN 1 ELSE 0 END) as upcoming_count,
+                    SUM(CASE WHEN s.status = 'completed' THEN 1 ELSE 0 END) as completed_count
+                FROM Categories c
+                LEFT JOIN skill_sessions s ON c.category_id = s.category_id
+                GROUP BY c.category_id, c.name
+                HAVING session_count > 0
+                ORDER BY session_count DESC
+                LIMIT ?";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$limit]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getPopularCategories: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Get session completion rate
+     * 
+     * @return array - Completion statistics
+     */
+    public static function getCompletionRate() {
+        global $conn;
+        
+        $sql = "SELECT 
+                    COUNT(*) as total_sessions,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_sessions,
+                    SUM(CASE WHEN status = 'upcoming' THEN 1 ELSE 0 END) as upcoming_sessions,
+                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_sessions
+                FROM skill_sessions";
+        
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $total = (int)$stats['total_sessions'];
+            $completed = (int)$stats['completed_sessions'];
+            $rate = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
+            
+            return [
+                'total_sessions' => $total,
+                'completed_sessions' => $completed,
+                'upcoming_sessions' => (int)$stats['upcoming_sessions'],
+                'cancelled_sessions' => (int)$stats['cancelled_sessions'],
+                'completion_rate' => $rate
+            ];
+        } catch (PDOException $e) {
+            error_log("Error in getCompletionRate: " . $e->getMessage());
+            return [
+                'total_sessions' => 0,
+                'completed_sessions' => 0,
+                'upcoming_sessions' => 0,
+                'cancelled_sessions' => 0,
+                'completion_rate' => 0
             ];
         }
     }

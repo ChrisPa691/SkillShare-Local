@@ -29,7 +29,7 @@ function require_login() {
         
         // No valid session or cookie - redirect to login
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
-        header('Location: /CourseProject/public/login.php');
+        header('Location: /SkillShare-Local/public/login.php');
         exit();
     }
     
@@ -60,7 +60,7 @@ function require_role($allowed_roles) {
     if (!in_array($_SESSION['role'], $allowed_roles)) {
         // Redirect based on current role
         $role = $_SESSION['role'];
-        header("Location: /CourseProject/public/{$role}_dashboard.php");
+        header("Location: /SkillShare-Local/public/{$role}_dashboard.php");
         exit();
     }
 }
@@ -165,7 +165,7 @@ function get_user_city() {
 function guest_only() {
     if (is_logged_in()) {
         $role = $_SESSION['role'];
-        header("Location: /CourseProject/public/{$role}_dashboard.php");
+        header("Location: /SkillShare-Local/public/{$role}_dashboard.php");
         exit();
     }
 }

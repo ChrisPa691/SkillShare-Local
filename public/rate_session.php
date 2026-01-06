@@ -42,9 +42,12 @@ if (!$booking || $booking['status'] !== 'accepted') {
     exit;
 }
 
-// Check if session is completed
-if ($session['status'] !== 'completed') {
-    set_flash('error', 'You can only rate completed sessions.');
+// Check if session has ended (event_datetime + duration has passed)
+$session_end_time = strtotime($session['event_datetime']) + ($session['duration_minutes'] * 60);
+$current_time = time();
+
+if ($current_time < $session_end_time) {
+    set_flash('error', 'You can only rate sessions after they have ended.');
     redirect('my_bookings.php');
     exit;
 }

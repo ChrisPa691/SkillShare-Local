@@ -55,7 +55,7 @@ require_once __DIR__ . '/../app/includes/navbar.php';
             <!-- Create Session Form -->
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <form method="POST" action="session_create.php" enctype="multipart/form-data" id="createSessionForm">
+                    <form method="POST" action="session_create.php" enctype="multipart/form-data" id="createSessionForm" class="needs-validation" novalidate>
                         
                         <!-- Basic Information -->
                         <h4 class="mb-3 text-primary"><i class="fas fa-info-circle"></i> Basic Information</h4>

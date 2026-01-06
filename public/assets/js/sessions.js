@@ -64,12 +64,15 @@ function initSessionForm() {
             addressInput.disabled = isOnline; // Disable when online
         }
         
-        // Clear unused fields
-        if (isOnline) {
-            if (cityInput) cityInput.value = '';
-            if (addressInput) addressInput.value = '';
-        } else {
-            if (onlineLinkInput) onlineLinkInput.value = '';
+        // Only clear unused fields on create form, not edit form
+        const isEditForm = document.getElementById('editSessionForm');
+        if (!isEditForm) {
+            if (isOnline) {
+                if (cityInput) cityInput.value = '';
+                if (addressInput) addressInput.value = '';
+            } else {
+                if (onlineLinkInput) onlineLinkInput.value = '';
+            }
         }
     }
     
@@ -77,28 +80,10 @@ function initSessionForm() {
     if (feeTypeRadios.length > 0) {
         feeTypeRadios.forEach(radio => radio.addEventListener('change', toggleFeeAmount));
     }
-        feeAmountInput.disabled = true; // Default to disabled
-    }
-    if (onlineLinkInput) {
-        onlineLinkInput.required = true; // Default to online
-        onlineLinkInput.disabled = false;
-    }
-    if (cityInput) {
-        cityInput.required = false;
-        cityInput.disabled = true;
-    }
-    if (addressInput) {
-        addressInput.required = false;
-        addressInput.disabled = trulse; // Default to not required
-    }
-    if (onlineLinkInput) {
-        onlineLinkInput.required = true; // Default to online
-    }
-    if (cityInput) {
-        cityInput.required = false;
-    }
-    if (addressInput) {
-        addressInput.required = false;
+    
+    // Event listeners for location type
+    if (locationTypeRadios.length > 0) {
+        locationTypeRadios.forEach(radio => radio.addEventListener('change', toggleLocation));
     }
     
     // Apply initial toggles based on current selections

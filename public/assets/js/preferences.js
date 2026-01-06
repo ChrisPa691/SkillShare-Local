@@ -16,12 +16,19 @@ function getPreferredCurrency() {
 /**
  * Set user's preferred currency
  * @param {string} currency - Currency code
+ * @param {boolean} saveToDb - Whether to save to database (default: true)
  */
-function setPreferredCurrency(currency) {
+function setPreferredCurrency(currency, saveToDb = true) {
     const allowedCurrencies = ['GBP', 'USD', 'EUR', 'CAD', 'AUD', 'JPY', 'INR'];
     
     if (allowedCurrencies.includes(currency)) {
         localStorage.setItem('preferredCurrency', currency);
+        
+        // Save to database if requested
+        if (saveToDb) {
+            savePreferenceToDb('user.currency', currency);
+        }
+        
         return true;
     }
     
@@ -114,14 +121,21 @@ function getPreferredTheme() {
 
 /**
  * Set user's preferred theme
- * @param {string} theme - Theme name ('light', 'dark', or 'auto')
+ * @param {string} theme - Theme name ('light', 'dark', or 'system')
+ * @param {boolean} saveToDb - Whether to save to database (default: true)
  */
-function setPreferredTheme(theme) {
-    const allowedThemes = ['light', 'dark', 'auto'];
+function setPreferredTheme(theme, saveToDb = true) {
+    const allowedThemes = ['light', 'dark', 'system'];
     
     if (allowedThemes.includes(theme)) {
         localStorage.setItem('theme', theme);
         applyTheme(theme);
+        
+        // Save to database if requested
+        if (saveToDb) {
+            savePreferenceToDb('theme', theme);
+        }
+        
         return true;
     }
     
@@ -354,8 +368,52 @@ if (document.readyState === 'loading') {
 
 // Initialize other features when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Sync preferences from database on page load
+    syncPreferencesFromDb();
+    
     // Update prices if elements exist
     updateAllPrices();
+    
+    // Initialize currency selector if it exists
+    const currencySelect = document.getElementById('preferredCurrency');
+    if (currencySelect) {
+        const savedCurrency = getPreferredCurrency();
+        currencySelect.value = savedCurrency;
+        
+        // Listen for currency changes
+        currencySelect.addEventListener('change', function() {
+            const newCurrency = this.value;
+            setPreferredCurrency(newCurrency, true); // true = save to database
+            updateAllPrices();
+            
+            // Show confirmation
+            if (typeof showToast === 'function') {
+                showToast('Currency preference saved to ' + newCurrency, 'success');
+            }
+            
+            console.log('Currency changed to:', newCurrency);
+        });
+    }
+    
+    // Initialize theme selector if it exists
+    const themeSelect = document.getElementById('themeMode');
+    if (themeSelect) {
+        const savedTheme = getPreferredTheme();
+        themeSelect.value = savedTheme;
+        
+        // Listen for theme changes
+        themeSelect.addEventListener('change', function() {
+            const newTheme = this.value;
+            setPreferredTheme(newTheme, true); // true = save to database
+            
+            // Show confirmation
+            if (typeof showToast === 'function') {
+                showToast('Theme changed to ' + newTheme + ' mode', 'success');
+            }
+            
+            console.log('Theme changed to:', newTheme);
+        });
+    }
     
     // Listen for system theme changes (for auto mode)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
@@ -375,8 +433,84 @@ document.addEventListener('DOMContentLoaded', function() {
             applyTheme(e.newValue);
         }
     });
-});
+    /*DATABASE SYNC
+    * ==========================================
+    * Functions for syncing preferences with database
+    */
 
+    /**
+     * Save a preference to the database via AJAX
+ * @param {string} key - Setting key (e.g., 'theme', 'language')
+     */
+    function savePreferenceToDb(key, value) {
+    return fetch('ajax/save_preference.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ key: key, value: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Failed to save preference to database:', data.message);
+        }
+        return data;
+    })
+    .catch(error => {
+        console.error('Error saving preference:', error);
+        return { success: false, error: error.message };
+    });
+}
+
+/**
+ * Load user preferences from database
+ * @returns {Promise} Promise that resolves with preferences object
+ */
+function loadPreferencesFromDb() {
+    return fetch('ajax/get_user_preferences.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.preferences) {
+                return data.preferences;
+            }
+            return null;
+        })
+        .catch(error => {
+            console.error('Error loading preferences:', error);
+            return null;
+        });
+}
+
+/**
+ * Sync localStorage with database preferences
+ * Call this on page load to ensure consistency
+ */
+function syncPreferencesFromDb() {
+    loadPreferencesFromDb().then(prefs => {
+        if (prefs) {
+            // Update localStorage with database values
+            if (prefs.theme) {
+                localStorage.setItem('theme', prefs.theme);
+                applyTheme(prefs.theme);
+            }
+            if (prefs.language) {
+                localStorage.setItem('language', prefs.language);
+            }
+            if (prefs.currency) {
+                localStorage.setItem('preferredCurrency', prefs.currency);
+            }
+            if (prefs.font_size) {
+                localStorage.setItem('fontSize', prefs.font_size);
+            }
+            
+            // Update UI if elements exist
+            updateAllPrices();
+            
+            console.log('Preferences synced from database');
+        }
+    });
+}});
 
 /**
  * ==========================================
@@ -409,6 +543,18 @@ export {
     getStorageItem,
     setStorageItem,
     removeStorageItem,
+    clearStorage,
+    
+    // Preferences
+    getItemsPerPage,
+    setItemsPerPage,
+    getShowImpactBadges,
+    setShowImpactBadges,
+    
+    // Database Sync
+    savePreferenceToDb,
+    loadPreferencesFromDb,
+    syncPreferencesFromDb
     clearStorage,
     
     // Preferences

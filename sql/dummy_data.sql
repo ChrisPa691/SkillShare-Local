@@ -61,7 +61,7 @@ INSERT IGNORE INTO Categories (name, description) VALUES
 -- ============================================
 -- IMPACT FACTORS
 -- ============================================
-INSERT IGNORE INTO impact_factors (category_id, co2_saved_per_participant_kg) VALUES
+INSERT IGNORE INTO impact_factors (skill_category, co2_saved_per_participant_kg) VALUES
 (1, 2.5),  -- Web Development
 (2, 3.0),  -- Data Science
 (3, 1.8),  -- Design
@@ -234,7 +234,7 @@ INSERT IGNORE INTO ratings (session_id, learner_id, rating, comment, created_at)
 -- ============================================
 -- Admin actions log (assuming admin user_id is 3)
 -- Note: Using INSERT IGNORE to prevent duplicate log entries
-INSERT IGNORE INTO admin_actions (admin_id, action_type, target_user_id, description, action_timestamp) VALUES
+INSERT IGNORE INTO admin_actions (admin_id, action_type, target_user_id, description, created_at) VALUES
 (3, 'user_suspended', 17, 'Suspended user for violating community guidelines', '2024-12-28 10:30:00'),
 (3, 'session_review', NULL, 'Reviewed and approved new session submissions', '2024-12-27 14:00:00'),
 (3, 'category_added', NULL, 'Added new category: Crafts', '2024-12-26 11:00:00'),

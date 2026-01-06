@@ -81,7 +81,13 @@ require_once '../app/includes/navbar.php';
 ?>
 
 <div class="container mt-5 pt-5">
-    <?php display_flash(); ?>
+    <?php 
+    display_breadcrumbs([
+        ['label' => 'Admin', 'url' => 'dashboard.php'],
+        ['label' => 'Manage Users', 'icon' => 'users-cog']
+    ]);
+    display_flash(); 
+    ?>
     
     <!-- Header -->
     <div class="dashboard-header mb-4">

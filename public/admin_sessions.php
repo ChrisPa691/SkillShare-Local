@@ -72,7 +72,13 @@ require_once '../app/includes/navbar.php';
 ?>
 
 <div class="container mt-5 pt-5">
-    <?php display_flash(); ?>
+    <?php 
+    display_breadcrumbs([
+        ['label' => 'Admin', 'url' => 'dashboard.php'],
+        ['label' => 'Manage Sessions', 'icon' => 'chalkboard']
+    ]);
+    display_flash(); 
+    ?>
     
     <!-- Header -->
     <div class="dashboard-header mb-4">
@@ -216,14 +222,10 @@ require_once '../app/includes/navbar.php';
                                             
                                             <!-- Cancel -->
                                             <?php if ($session['status'] !== 'canceled'): ?>
-                                                <form method="POST" style="display: inline;">
-                                                    <input type="hidden" name="session_id" value="<?php echo $session['session_id']; ?>">
-                                                    <input type="hidden" name="action" value="cancel">
-                                                    <button type="submit" class="btn btn-outline-danger" 
-                                                            onclick="return confirm('Are you sure you want to cancel this session?');">
-                                                        <i class="fas fa-ban"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        onclick="confirmCancelSession(<?php echo $session['session_id']; ?>, '<?php echo htmlspecialchars($session['title'], ENT_QUOTES); ?>')">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
                                             <?php endif; ?>
                                         </div>
                                         
@@ -282,5 +284,27 @@ require_once '../app/includes/navbar.php';
         </a>
     </div>
 </div>
+
+<!-- Hidden form for session cancellation -->
+<form method="POST" id="cancelSessionForm" style="display: none;">
+    <input type="hidden" name="session_id" id="cancelSessionId">
+    <input type="hidden" name="action" value="cancel">
+</form>
+
+<script>
+function confirmCancelSession(sessionId, sessionTitle) {
+    showConfirmDialog({
+        title: 'Cancel Session',
+        message: `Are you sure you want to cancel the session "<strong>${sessionTitle}</strong>"?<br><br>This will notify all participants and cannot be undone.`,
+        confirmText: 'Cancel Session',
+        confirmClass: 'btn-danger',
+        onConfirm: () => {
+            document.getElementById('cancelSessionId').value = sessionId;
+            showLoadingSpinner('Canceling session...');
+            document.getElementById('cancelSessionForm').submit();
+        }
+    });
+}
+</script>
 
 <?php require_once '../app/includes/footer.php'; ?>

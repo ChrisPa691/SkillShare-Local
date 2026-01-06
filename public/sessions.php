@@ -35,6 +35,15 @@ if (isset($_GET['city']) && $_GET['city'] !== '') {
 if (isset($_GET['search']) && $_GET['search'] !== '') {
     $filters['search'] = $_GET['search'];
 }
+if (isset($_GET['date_from']) && $_GET['date_from'] !== '') {
+    $filters['date_from'] = $_GET['date_from'];
+}
+if (isset($_GET['date_to']) && $_GET['date_to'] !== '') {
+    $filters['date_to'] = $_GET['date_to'];
+}
+if (isset($_GET['has_availability']) && $_GET['has_availability'] === '1') {
+    $filters['has_availability'] = true;
+}
 
 // Get sessions with filters
 $sessions = Session::getAllSessions($filters);
@@ -51,6 +60,9 @@ $current_location = $_GET['location_type'] ?? '';
 $current_fee = $_GET['fee_type'] ?? '';
 $current_city = $_GET['city'] ?? '';
 $current_search = $_GET['search'] ?? '';
+$current_date_from = $_GET['date_from'] ?? '';
+$current_date_to = $_GET['date_to'] ?? '';
+$current_has_availability = isset($_GET['has_availability']) && $_GET['has_availability'] === '1';
 
 // Page metadata
 $page_title = "Browse Skill Sessions";
@@ -61,6 +73,12 @@ require_once __DIR__ . '/../app/includes/navbar.php';
 ?>
 
 <div class="container my-5">
+    <?php 
+    display_breadcrumbs([
+        'Browse Sessions'
+    ]);
+    ?>
+    
     <div class="row">
         <div class="col-12">
             <h1 class="mb-4">
@@ -133,6 +151,28 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                                 </select>
                             </div>
 
+                            <!-- Date Range Filters -->
+                            <div class="col-md-3">
+                                <label for="date_from" class="form-label">From Date</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control" value="<?= escape($current_date_from) ?>">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="date_to" class="form-label">To Date</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control" value="<?= escape($current_date_to) ?>">
+                            </div>
+
+                            <!-- Availability Filter -->
+                            <div class="col-md-3">
+                                <label class="form-label d-block">Availability</label>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="has_availability" value="1" id="has_availability" class="form-check-input" <?= $current_has_availability ? 'checked' : '' ?>>
+                                    <label class="form-check-label" for="has_availability">
+                                        Only show sessions with available spots
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Filter Buttons -->
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">
@@ -153,7 +193,21 @@ require_once __DIR__ . '/../app/includes/navbar.php';
     <!-- Results Count -->
     <div class="row mb-3">
         <div class="col-12">
-            <p class="text-muted">Found <?= count($sessions) ?> session(s)</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Found <strong><?= count($sessions) ?></strong> session<?= count($sessions) !== 1 ? 's' : '' ?>
+                    <?php if (!empty($filters)): ?>
+                        matching your filters
+                    <?php endif; ?>
+                </p>
+                <?php if (!empty($filters)): ?>
+                    <small class="text-muted">
+                        <i class="fas fa-filter me-1"></i>
+                        <?= count($filters) ?> filter<?= count($filters) !== 1 ? 's' : '' ?> active
+                    </small>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
@@ -233,9 +287,13 @@ require_once __DIR__ . '/../app/includes/navbar.php';
                                     <span class="badge bg-warning text-dark">$<?= number_format($session['fee_amount'], 2) ?></span>
                                 <?php endif; ?>
                                 
-                                <small class="text-muted">
-                                    <?= $session['capacity_remaining'] ?> / <?= $session['total_capacity'] ?> seats
-                                </small>
+                                <?php if ($session['capacity_remaining'] <= 0): ?>
+                                    <span class="badge bg-danger">SOLD OUT</span>
+                                <?php else: ?>
+                                    <small class="text-muted">
+                                        <?= $session['capacity_remaining'] ?> / <?= $session['total_capacity'] ?> seats
+                                    </small>
+                                <?php endif; ?>
                             </div>
                             
                             <!-- Rating -->

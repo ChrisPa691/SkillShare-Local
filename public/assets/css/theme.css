@@ -464,6 +464,141 @@ textarea {
 }
 
 /* ==========================================
+   ADDITIONAL DARK MODE FIXES
+   ========================================== */
+
+/* All text elements */
+body[data-theme="dark"] h1,
+body[data-theme="dark"] h2,
+body[data-theme="dark"] h3,
+body[data-theme="dark"] h4,
+body[data-theme="dark"] h5,
+body[data-theme="dark"] h6,
+body[data-theme="dark"] p,
+body[data-theme="dark"] span,
+body[data-theme="dark"] li,
+body[data-theme="dark"] td,
+body[data-theme="dark"] th,
+body[data-theme="dark"] label,
+body[data-theme="dark"] .text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Muted text */
+body[data-theme="dark"] .text-muted,
+body[data-theme="dark"] .text-secondary,
+body[data-theme="dark"] small {
+    color: var(--text-secondary) !important;
+}
+
+/* Links */
+body[data-theme="dark"] a:not(.btn):not(.nav-link) {
+    color: var(--color-primary);
+}
+
+body[data-theme="dark"] a:not(.btn):not(.nav-link):hover {
+    color: var(--color-primary-hover);
+}
+
+/* Buttons */
+body[data-theme="dark"] .btn-outline-secondary {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Form controls */
+body[data-theme="dark"] .form-control:disabled,
+body[data-theme="dark"] .form-select:disabled {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+}
+
+/* Input groups */
+body[data-theme="dark"] .input-group-text {
+    background-color: var(--bg-secondary);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+/* Checkboxes and radios */
+body[data-theme="dark"] .form-check-input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+body[data-theme="dark"] .form-check-label {
+    color: var(--text-primary);
+}
+
+/* Accordions */
+body[data-theme="dark"] .accordion-item {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .accordion-button {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .accordion-button:not(.collapsed) {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .accordion-body {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+}
+
+/* Offcanvas */
+body[data-theme="dark"] .offcanvas {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .offcanvas-header {
+    border-bottom-color: var(--border-color);
+}
+
+/* Container backgrounds */
+body[data-theme="dark"] .container,
+body[data-theme="dark"] .container-fluid {
+    color: var(--text-primary);
+}
+
+/* Dividers */
+body[data-theme="dark"] hr {
+    border-color: var(--border-color);
+    opacity: 1;
+}
+
+/* Wells/Info boxes */
+body[data-theme="dark"] .bg-light {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Footers */
+body[data-theme="dark"] footer {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-top-color: var(--border-color);
+}
+
+/* Headers */
+body[data-theme="dark"] header {
+    background-color: var(--navbar-bg);
+    color: var(--text-primary);
+}
+
+/* ==========================================
    THEME TOGGLE ICON (OPTIONAL)
    ========================================== */
 .theme-toggle-icon {
@@ -475,4 +610,97 @@ textarea {
 
 .theme-toggle-icon:hover {
     transform: rotate(20deg);
+}
+
+/* ==========================================
+   ADDITIONAL BOOTSTRAP UTILITY OVERRIDES
+   ========================================== */
+
+/* Card images placeholder backgrounds */
+body[data-theme="dark"] .bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Text color utilities */
+body[data-theme="dark"] .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Alert components */
+body[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    border-color: var(--color-info);
+    color: var(--text-primary);
+}
+
+/* Card title links */
+body[data-theme="dark"] .card-title a {
+    color: var(--color-primary);
+}
+
+body[data-theme="dark"] .card-title a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* Lead text */
+body[data-theme="dark"] .lead {
+    color: var(--text-primary);
+}
+
+/* Shadow utilities */
+body[data-theme="dark"] .shadow-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+body[data-theme="dark"] .shadow {
+    box-shadow: var(--shadow) !important;
+}
+
+body[data-theme="dark"] .shadow-lg {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* ==========================================
+   TABLE FIXES FOR DARK MODE
+   ========================================== */
+
+/* Ensure table cells have proper colors */
+body[data-theme="dark"] .table td,
+body[data-theme="dark"] .table th {
+    color: var(--text-primary) !important;
+    background-color: transparent;
+}
+
+body[data-theme="dark"] .table thead th {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .table tbody tr {
+    background-color: var(--bg-card);
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: var(--bg-secondary);
+}
+
+body[data-theme="dark"] .table-hover > tbody > tr:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+body[data-theme="dark"] .table-hover > tbody > tr:hover td,
+body[data-theme="dark"] .table-hover > tbody > tr:hover th {
+    color: var(--text-primary) !important;
+}
+
+/* Fix for table-danger and other contextual classes */
+body[data-theme="dark"] .table-danger {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+}
+
+body[data-theme="dark"] .table-danger td,
+body[data-theme="dark"] .table-danger th {
+    color: var(--text-primary) !important;
 }

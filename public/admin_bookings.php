@@ -87,6 +87,10 @@ try {
     $bookings = [];
 }
 
+// Get statistics
+$overall_stats = Booking::getOverallStats();
+$monthly_stats = Booking::getBookingsPerMonth(6); // Last 6 months
+
 $page_title = "View Bookings";
 
 require_once '../app/includes/header.php';
@@ -94,7 +98,13 @@ require_once '../app/includes/navbar.php';
 ?>
 
 <div class="container mt-5 pt-5">
-    <?php display_flash(); ?>
+    <?php 
+    display_breadcrumbs([
+        ['label' => 'Admin', 'url' => 'dashboard.php'],
+        ['label' => 'View All Bookings', 'icon' => 'bookmark']
+    ]);
+    display_flash(); 
+    ?>
     
     <!-- Header -->
     <div class="dashboard-header mb-4">
@@ -275,45 +285,118 @@ require_once '../app/includes/navbar.php';
 
     <!-- Statistics Summary -->
     <div class="row mt-4">
-        <div class="col-md-3">
+        <div class="col-12">
+            <h3 class="mb-3"><i class="fas fa-chart-bar"></i> Booking Statistics</h3>
+        </div>
+    </div>
+    
+    <!-- Overall Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4><?php echo db_count('bookings'); ?></h4>
-                    <p class="text-muted mb-0">Total Bookings</p>
+                    <h4 class="text-primary"><?php echo $overall_stats['total_bookings'] ?? 0; ?></h4>
+                    <p class="text-muted mb-0 small">Total Bookings</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4><?php echo db_count('bookings', ['status' => 'accepted']); ?></h4>
-                    <p class="text-muted mb-0">Accepted</p>
+                    <h4 class="text-warning"><?php echo $overall_stats['pending'] ?? 0; ?></h4>
+                    <p class="text-muted mb-0 small">Pending</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4><?php echo db_count('bookings', ['status' => 'pending']); ?></h4>
-                    <p class="text-muted mb-0">Pending</p>
+                    <h4 class="text-success"><?php echo $overall_stats['accepted'] ?? 0; ?></h4>
+                    <p class="text-muted mb-0 small">Accepted</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4>
+                    <h4 class="text-danger"><?php echo $overall_stats['declined'] ?? 0; ?></h4>
+                    <p class="text-muted mb-0 small">Declined</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-secondary"><?php echo $overall_stats['canceled'] ?? 0; ?></h4>
+                    <p class="text-muted mb-0 small">Canceled</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="text-info">
                         <?php 
-                        $total = db_count('bookings');
-                        $accepted = db_count('bookings', ['status' => 'accepted']);
+                        $total = $overall_stats['total_bookings'] ?? 0;
+                        $accepted = $overall_stats['accepted'] ?? 0;
                         echo $total > 0 ? round(($accepted / $total) * 100) : 0;
                         ?>%
                     </h4>
-                    <p class="text-muted mb-0">Acceptance Rate</p>
+                    <p class="text-muted mb-0 small">Accept Rate</p>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Monthly Breakdown -->
+    <?php if (!empty($monthly_stats)): ?>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Monthly Breakdown (Last 6 Months)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center text-warning">Pending</th>
+                                    <th class="text-center text-success">Accepted</th>
+                                    <th class="text-center text-danger">Declined</th>
+                                    <th class="text-center text-secondary">Canceled</th>
+                                    <th class="text-center">Accept Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($monthly_stats as $stat): ?>
+                                <tr>
+                                    <td><strong><?php echo escape($stat['month_label']); ?></strong></td>
+                                    <td class="text-center"><?php echo $stat['total']; ?></td>
+                                    <td class="text-center text-warning"><?php echo $stat['pending']; ?></td>
+                                    <td class="text-center text-success"><?php echo $stat['accepted']; ?></td>
+                                    <td class="text-center text-danger"><?php echo $stat['declined']; ?></td>
+                                    <td class="text-center text-secondary"><?php echo $stat['canceled']; ?></td>
+                                    <td class="text-center">
+                                        <?php 
+                                        $month_total = $stat['total'];
+                                        $month_accepted = $stat['accepted'];
+                                        $rate = $month_total > 0 ? round(($month_accepted / $month_total) * 100) : 0;
+                                        echo $rate . '%';
+                                        ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Back to Dashboard -->
     <div class="text-center mt-4 mb-5">

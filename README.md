@@ -8,7 +8,7 @@
 **Academic Year**: 2025-2026  
 **Semester**: Fall 2025  
 **Student Name**: Christos Paparistodimou  
-**Student ID**: ST024449 
+**Student ID**: ST024449  
 **Submission Date**: January 2026  
 **Project Version**: 1.0.0
 
